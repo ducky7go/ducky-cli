@@ -1,11 +1,12 @@
 # ducky-cli
 
-A command-line tool for packaging and publishing game mods to NuGet servers. `ducky-cli` brings the functionality of `action-ducky-nuget` GitHub Action to local development environments, enabling game mod developers to package and publish their mods directly from the command line.
+A command-line tool for packaging and publishing game mods to NuGet servers and Steam Workshop. `ducky-cli` brings the functionality of `action-ducky-nuget` GitHub Action to local development environments, enabling game mod developers to package and publish their mods directly from the command line.
 
 ## Features
 
 - **NuGet Packaging**: Create `.nupkg` packages from mod directories
 - **NuGet Publishing**: Publish packages to nuget.org or custom NuGet servers
+- **Steam Workshop Publishing**: Publish mods directly to Steam Workshop with multi-language support
 - **Validation**: Validate mods against the [NuGet Mod Packaging Specification v1.0](https://github.com/ducky7go/dukcy-package-spec)
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 - **Namespace Design**: Organized commands for future support of other package formats
@@ -49,6 +50,22 @@ ducky nuget push ./mods/MyMod --pack
 
 ```bash
 ducky nuget validate ./mods/MyMod
+```
+
+### Steam Workshop Publishing
+
+```bash
+# Validate Steam Workshop configuration
+ducky steam validate ./mods/MyMod
+
+# Publish to Steam Workshop (first-time upload)
+ducky steam push ./mods/MyMod
+
+# Update existing Workshop item with new descriptions
+ducky steam push ./mods/MyMod --update-description
+
+# Update with changelog
+ducky steam push ./mods/MyMod --changelog "Fixed critical bugs"
 ```
 
 ## Commands
@@ -122,6 +139,58 @@ ducky nuget validate <path> [options]
 ducky nuget validate ./mods/MyMod
 ```
 
+### `ducky steam validate`
+
+Validate a mod directory for Steam Workshop publishing.
+
+```bash
+ducky steam validate <path> [options]
+```
+
+**Arguments:**
+- `<path>` - Path to the mod directory
+
+**Options:**
+- `-v, --verbose` - Enable verbose output
+
+**Example:**
+```bash
+ducky steam validate ./mods/MyMod
+```
+
+### `ducky steam push`
+
+Publish a mod to Steam Workshop.
+
+```bash
+ducky steam push <path> [options]
+```
+
+**Arguments:**
+- `<path>` - Path to the mod directory
+
+**Options:**
+- `--update-description` - Update Workshop descriptions from `description/*.md` files
+- `--changelog <note>` - Update changelog notes for this update
+- `-v, --verbose` - Enable verbose output
+
+**Examples:**
+```bash
+# First-time upload (creates new Workshop item)
+ducky steam push ./mods/MyMod
+
+# Update existing item without changing descriptions
+ducky steam push ./mods/MyMod
+
+# Update with new descriptions and changelog
+ducky steam push ./mods/MyMod --update-description --changelog "Bug fixes"
+```
+
+**Steam Workshop Description Update Behavior:**
+- **First-time upload (no `publishedFileId` in info.ini)**: Always sets primary language title and description (required)
+- **Update with `--update-description`**: Updates ALL language descriptions (including primary)
+- **Update without `--update-description`**: Skips ALL description updates (only uploads content files)
+
 ## Configuration
 
 Configuration can be provided via:
@@ -131,9 +200,13 @@ Configuration can be provided via:
 
 ### Environment Variables
 
+**NuGet:**
 - `NUGET_API_KEY` - API key for NuGet authentication
 - `NUGET_SERVER` - Default NuGet server URL
 - `NUGET_VERBOSE` - Enable verbose output
+
+**Steam:**
+- `STEAM_APP_ID` - Steam App ID for Workshop publishing (default: `3167020`)
 
 ## Mod Directory Structure
 
@@ -143,7 +216,11 @@ A valid mod directory should contain:
 MyMod/
 ├── info.ini              # Mod metadata (required)
 ├── MyMod.dll             # Main DLL (required, name must match info.ini name field)
-├── preview.png           # Optional preview image
+├── preview.png           # Preview image (required for Steam Workshop)
+├── description/          # Multi-language descriptions (for Steam Workshop)
+│   ├── en.md            # English description
+│   ├── zh.md            # Chinese description
+│   └── japanese.md      # Japanese description
 └── ...other files        # Any other mod files
 ```
 
@@ -173,6 +250,40 @@ OtherMod=1.0.0
 - `license` - License identifier
 - `tags` - Comma-separated list of tags
 - `dependencies` - Comma-separated list of dependencies with optional versions
+- `publishedFileId` - Steam Workshop published file ID (added automatically after first Steam publish)
+
+## Steam Workshop Multi-Language Support
+
+For Steam Workshop publishing, you can provide multi-language descriptions in the `description/` directory:
+
+```
+description/
+├── en.md          # English (english)
+├── zh.md          # Simplified Chinese (schinese)
+├── zh-tw.md       # Traditional Chinese (tchinese)
+├── japanese.md    # Japanese (japanese)
+├── ko.md          # Korean (koreana)
+└── ...            # Other supported languages
+```
+
+**Filename to Steam Language Code Mappings:**
+- `en.md` → `english`
+- `zh.md`, `zh-cn.md` → `schinese`
+- `zh-tw.md` → `tchinese`
+- `japanese.md` → `japanese`
+- `ko.md` → `koreana`
+- `de.md` → `german`
+- `fr.md` → `french`
+- `es.md` → `spanish`
+- `ru.md` → `russian`
+- And many more...
+
+**Description Format:**
+Each `.md` file should contain:
+1. A title (first H1 heading: `# My Mod Title`)
+2. The description content (in Markdown format)
+
+The Markdown will be automatically converted to HTML for Steam Workshop.
 
 ## Validation Rules
 

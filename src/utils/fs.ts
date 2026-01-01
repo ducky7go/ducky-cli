@@ -146,3 +146,30 @@ export async function isFile(path: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Write text to a file
+ */
+export async function writeTextFile(filePath: string, content: string): Promise<void> {
+  try {
+    await fsPromises.writeFile(filePath, content, 'utf-8');
+  } catch (error) {
+    throw new FileSystemError(
+      `Failed to write file: ${filePath}`,
+      [`Ensure you have permission to write to the file`],
+    );
+  }
+}
+
+/**
+ * Format bytes to human-readable size
+ */
+export function formatBytes(bytes: number): string {
+  if (bytes === 0) return '0 B';
+
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const k = 1024;
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return `${(bytes / Math.pow(k, i)).toFixed(i > 0 ? 2 : 0)} ${units[i]}`;
+}

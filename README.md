@@ -5,13 +5,13 @@
 ## 安装
 
 ```bash
-npm install -g ducky-cli
+npm install -g @ducky7go/ducky-cli
 ```
 
 或使用 npx：
 
 ```bash
-npx ducky-cli --help
+npx @ducky7go/ducky-cli --help
 ```
 
 ## 快速开始

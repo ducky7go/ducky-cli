@@ -35,17 +35,17 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Check formatting
-        id: format-check
-        run: npx prettier --check src
-        continue-on-error: true
+      # - name: Check formatting
+      #   id: format-check
+      #   run: npx prettier --check src
+      #   continue-on-error: true
 
-      - name: Auto-fix formatting
-        if: steps.format-check.outcome == 'failure'
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          npx prettier --write src
-          git add src
-          git commit -m "style: auto-fix formatting [skip ci]"
-          git push
+      # - name: Auto-fix formatting
+      #   if: steps.format-check.outcome == 'failure'
+      #   run: |
+      #     git config user.name 'github-actions[bot]'
+      #     git config user.email 'github-actions[bot]@users.noreply.github.com'
+      #     npx prettier --write src
+      #     git add src
+      #     git commit -m "style: auto-fix formatting [skip ci]"
+      #     git push

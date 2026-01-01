@@ -1,13 +1,17 @@
-import { readTextFile } from '../../utils/fs.js';
+import { readTextFile, fileExists } from '../../utils/fs.js';
 import { FileSystemError, ValidationError } from '../../utils/errors.js';
+import { join } from 'path';
 
 /**
  * Metadata structure parsed from info.ini
  */
 export interface ModMetadata {
   name: string;
+  displayName?: string;
   version: string;
   description?: string;
+  readme?: string;
+  releaseNotes?: string;
   author?: string;
   icon?: string;
   tags?: string[];
@@ -15,6 +19,7 @@ export interface ModMetadata {
   projectUrl?: string;
   license?: string;
   copyright?: string;
+  publishedFileId?: string;
 }
 
 /**
@@ -102,15 +107,19 @@ export function parseInfoIniContent(content: string): ModMetadata {
 
   return {
     name,
+    displayName: metadata.displayName?.trim(),
     version,
     description: metadata.description?.trim(),
+    readme: metadata.readme?.trim(),
+    releaseNotes: metadata.releaseNotes?.trim(),
     author: metadata.author?.trim(),
     icon: metadata.icon?.trim(),
     tags: parseList(metadata.tags),
     dependencies: parseList(metadata.dependencies),
-    projectUrl: metadata.projectUrl?.trim(),
+    projectUrl: metadata.projectUrl?.trim() || metadata.homepage?.trim(),
     license: metadata.license?.trim(),
     copyright: metadata.copyright?.trim(),
+    publishedFileId: metadata.publishedFileId?.trim(),
   };
 }
 
@@ -186,4 +195,93 @@ function isValidSemVer(version: string): boolean {
   const semverPattern =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
   return semverPattern.test(version);
+}
+
+/**
+ * Load description with precedence order:
+ * 1. readme file (if info.ini readme is a file path that exists)
+ * 2. readme content (if info.ini readme is not a file but has content)
+ * 3. description/zh.md
+ * 4. description/en.md
+ * 5. info.ini description field
+ *
+ * @param modPath - Path to the mod directory
+ * @param metadata - Parsed mod metadata
+ * @returns Description content
+ */
+export async function loadDescription(
+  modPath: string,
+  metadata: ModMetadata
+): Promise<string> {
+  // 1. Try readme file if specified (highest priority)
+  if (metadata.readme) {
+    const readmePath = join(modPath, metadata.readme);
+
+    if (await fileExists(readmePath)) {
+      return await readTextFile(readmePath);
+    }
+
+    // 2. If readme is not a file but has content, use it directly
+    if (metadata.readme.trim().length > 0) {
+      return metadata.readme;
+    }
+  }
+
+  // 3. Try description/zh.md
+  const zhMdPath = join(modPath, 'description', 'zh.md');
+  if (await fileExists(zhMdPath)) {
+    return await readTextFile(zhMdPath);
+  }
+
+  // 4. Try description/en.md
+  const enMdPath = join(modPath, 'description', 'en.md');
+  if (await fileExists(enMdPath)) {
+    return await readTextFile(enMdPath);
+  }
+
+  // 5. Use info.ini description field (fallback)
+  if (metadata.description) {
+    return metadata.description;
+  }
+
+  // Final fallback: return empty string
+  return '';
+}
+
+/**
+ * Load release notes with precedence order:
+ * 1. releaseNotes file (if info.ini releaseNotes is a file path that exists)
+ * 2. releaseNotes content (if info.ini releaseNotes is not a file but has content)
+ * 3. releaseNotes.md file in mod directory
+ *
+ * @param modPath - Path to the mod directory
+ * @param metadata - Parsed mod metadata
+ * @returns Release notes content
+ */
+export async function loadReleaseNotes(
+  modPath: string,
+  metadata: ModMetadata
+): Promise<string> {
+  // 1. Try releaseNotes file if specified (highest priority)
+  if (metadata.releaseNotes) {
+    const releaseNotesPath = join(modPath, metadata.releaseNotes);
+
+    if (await fileExists(releaseNotesPath)) {
+      return await readTextFile(releaseNotesPath);
+    }
+
+    // 2. If releaseNotes is not a file but has content, use it directly
+    if (metadata.releaseNotes.trim().length > 0) {
+      return metadata.releaseNotes;
+    }
+  }
+
+  // 3. Try releaseNotes.md file
+  const releaseNotesMdPath = join(modPath, 'releaseNotes.md');
+  if (await fileExists(releaseNotesMdPath)) {
+    return await readTextFile(releaseNotesMdPath);
+  }
+
+  // Final fallback: return empty string
+  return '';
 }

@@ -19,7 +19,9 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/cli.ts",
-    "test": "vitest",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --run --coverage",
     "lint": "eslint src",
     "format": "prettier --write src",
     "prepublishOnly": "npm run build && npm test"
@@ -44,6 +46,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@types/node": "^25.0.3",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9.0.0",
     "prettier": "^3.0.0",
     "tsx": "^4.21.0",
@@ -59,7 +62,7 @@
     "ini": "^4.1.0",
     "ora": "^8.0.0"
   },
-	"publishConfig": {
-		"access": "public"
-	}
+  "publishConfig": {
+    "access": "public"
+  }
 }

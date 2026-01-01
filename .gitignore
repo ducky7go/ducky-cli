@@ -3,3 +3,4 @@ dist
 .env
 mods_unzip
 pkg
+coverage

@@ -1,6 +1,6 @@
 {
-  "name": "ducky-cli",
-  "version": "0.1.0",
+  "name": "@ducky7go/ducky-cli",
+  "version": "0.0.1",
   "description": "CLI tool for packaging and publishing game mods to NuGet",
   "type": "module",
   "main": "dist/index.js",
@@ -58,5 +58,8 @@
     "fs-extra": "^11.2.0",
     "ini": "^4.1.0",
     "ora": "^8.0.0"
-  }
+  },
+	"publishConfig": {
+		"access": "public"
+	}
 }

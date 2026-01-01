@@ -1,241 +1,89 @@
 # ducky-cli
 
-A command-line tool for packaging and publishing game mods to NuGet servers. `ducky-cli` brings the functionality of `action-ducky-nuget` GitHub Action to local development environments, enabling game mod developers to package and publish their mods directly from the command line.
+用于将游戏模组打包并发布到 NuGet 服务器和 Steam 创意工坊的命令行工具。
 
-## Features
-
-- **NuGet Packaging**: Create `.nupkg` packages from mod directories
-- **NuGet Publishing**: Publish packages to nuget.org or custom NuGet servers
-- **Validation**: Validate mods against the [NuGet Mod Packaging Specification v1.0](https://github.com/ducky7go/dukcy-package-spec)
-- **Cross-Platform**: Works on Windows, macOS, and Linux
-- **Namespace Design**: Organized commands for future support of other package formats
-
-## Installation
+## 安装
 
 ```bash
 npm install -g ducky-cli
 ```
 
-Or use directly with npx:
+或使用 npx：
 
 ```bash
 npx ducky-cli --help
 ```
 
-## Quick Start
-
-### Package a Mod
+## 快速开始
 
 ```bash
+# NuGet 打包和发布
 ducky nuget pack ./mods/MyMod
+ducky nuget push ./mods/MyMod.1.0.0.nupkg
+
+# Steam 创意工坊发布
+ducky steam push ./mods/MyMod
+ducky steam push ./mods/MyMod --update-description
 ```
 
-This creates a `.nupkg` file in the mod directory.
+## 文档
 
-### Publish to NuGet
+- [NuGet 文档](./docs/nuget.md) - 打包和发布到 NuGet 服务器
+- [Steam 文档](./docs/steam.md) - 发布到 Steam 创意工坊
+
+## 功能特性
+
+- **NuGet 打包**：从模组目录创建 `.nupkg` 包
+- **NuGet 发布**：发布到 nuget.org 或自定义 NuGet 服务器
+- **Steam 创意工坊发布**：支持多语言发布模组
+- **验证**：按照打包规范验证模组
+- **跨平台**：支持 Windows、macOS 和 Linux
+
+## 命令概览
+
+| 命令 | 描述 |
+|------|------|
+| `ducky nuget pack <path>` | 将模组目录打包为 `.nupkg` |
+| `ducky nuget push <path>` | 发布到 NuGet 服务器 |
+| `ducky nuget validate <path>` | 验证 NuGet 模组 |
+| `ducky steam validate <path>` | 验证 Steam 创意工坊模组 |
+| `ducky steam push <path>` | 发布到 Steam 创意工坊 |
+
+## 配置
+
+通过环境变量设置：
 
 ```bash
-# Set your API key
+# NuGet
 export NUGET_API_KEY=your-api-key
+export NUGET_SERVER=https://api.nuget.org/v3/index.json
 
-# Push a .nupkg file
-ducky nuget push ./mods/MyMod.1.0.0.nupkg
-
-# Or pack and push in one step
-ducky nuget push ./mods/MyMod --pack
+# Steam
+export STEAM_APP_ID=3167020
 ```
 
-### Validate a Mod
-
-```bash
-ducky nuget validate ./mods/MyMod
-```
-
-## Commands
-
-### `ducky nuget pack`
-
-Package a mod directory into a `.nupkg` file.
-
-```bash
-ducky nuget pack <path> [options]
-```
-
-**Arguments:**
-- `<path>` - Path to the mod directory
-
-**Options:**
-- `-o, --output <path>` - Output directory for the `.nupkg` file (default: same as input)
-- `-v, --verbose` - Enable verbose output
-
-**Example:**
-```bash
-ducky nuget pack ./mods/MyMod -o ./output
-```
-
-### `ducky nuget push`
-
-Publish a `.nupkg` file to a NuGet server.
-
-```bash
-ducky nuget push <path> [options]
-```
-
-**Arguments:**
-- `<path>` - Path to the `.nupkg` file or mod directory (with `--pack`)
-
-**Options:**
-- `-p, --pack` - Package the mod before pushing
-- `-s, --server <url>` - NuGet server URL (default: `https://api.nuget.org/v3/index.json`)
-- `-k, --api-key <key>` - NuGet API key
-- `-o, --output <path>` - Output directory for `.nupkg` file (when using `--pack`)
-- `-v, --verbose` - Enable verbose output
-
-**Examples:**
-```bash
-# Push an existing .nupkg file
-ducky nuget push ./mods/MyMod.1.0.0.nupkg
-
-# Pack and push in one step
-ducky nuget push ./mods/MyMod --pack
-
-# Use a custom NuGet server
-ducky nuget push ./mods/MyMod.1.0.0.nupkg --server https://my-nuget-server.com/v3/index.json
-```
-
-### `ducky nuget validate`
-
-Validate a mod directory against the NuGet Mod Packaging Specification.
-
-```bash
-ducky nuget validate <path> [options]
-```
-
-**Arguments:**
-- `<path>` - Path to the mod directory
-
-**Options:**
-- `-v, --verbose` - Enable verbose output
-
-**Example:**
-```bash
-ducky nuget validate ./mods/MyMod
-```
-
-## Configuration
-
-Configuration can be provided via:
-1. Command-line flags (highest priority)
-2. Environment variables
-3. Default values (lowest priority)
-
-### Environment Variables
-
-- `NUGET_API_KEY` - API key for NuGet authentication
-- `NUGET_SERVER` - Default NuGet server URL
-- `NUGET_VERBOSE` - Enable verbose output
-
-## Mod Directory Structure
-
-A valid mod directory should contain:
+## 模组目录结构
 
 ```
 MyMod/
-├── info.ini              # Mod metadata (required)
-├── MyMod.dll             # Main DLL (required, name must match info.ini name field)
-├── preview.png           # Optional preview image
-└── ...other files        # Any other mod files
+├── info.ini              # 模组元数据（必需）
+├── MyMod.dll             # 主 DLL（必需）
+├── preview.png           # 预览图片（Steam 必需）
+├── description/          # 多语言描述（Steam 使用）
+│   ├── en.md
+│   └── zh.md
+└── ...其他文件
 ```
 
-### info.ini Format
+## 许可证
 
-```ini
-name=MyMod
-version=1.0.0
-description=My awesome game mod
-author=Your Name
-projectUrl=https://github.com/yourname/mymod
-license=MIT
-tags=game,mod,example
+MIT License - 详见 LICENSE 文件
 
-[dependencies]
-OtherMod=1.0.0
-```
+## 相关项目
 
-**Required fields:**
-- `name` - NuGet package ID (must start with letter or underscore, max 100 chars)
-- `version` - SemVer 2.0 version (e.g., `1.0.0`, `2.1.0-beta`)
+- [action-ducky-nuget](https://github.com/ducky7go/action-ducky-nuget) - CI/CD GitHub Action
+- [NuGet 模组打包规范](https://github.com/ducky7go/dukcy-package-spec)
 
-**Optional fields:**
-- `description` - Package description
-- `author` - Package author
-- `projectUrl` - Project URL
-- `license` - License identifier
-- `tags` - Comma-separated list of tags
-- `dependencies` - Comma-separated list of dependencies with optional versions
+## 支持
 
-## Validation Rules
-
-The tool validates mods against these rules:
-
-1. **DLL Name Matching**: At least one DLL file must have a base name matching the `name` field in `info.ini`
-2. **SemVer 2.0 Version**: Version must follow semantic versioning 2.0 format
-3. **Valid NuGet ID**: Package name must be a valid NuGet identifier
-4. **Required Fields**: `name` and `version` fields are required
-
-## Examples
-
-### Complete Workflow
-
-```bash
-# 1. Create your mod directory with info.ini and DLL files
-mkdir -p ./mods/MyMod
-
-# 2. Validate your mod
-ducky nuget validate ./mods/MyMod
-
-# 3. Package your mod
-ducky nuget pack ./mods/MyMod
-
-# 4. Publish to NuGet
-export NUGET_API_KEY=your-api-key
-ducky nuget push ./mods/MyMod.1.0.0.nupkg
-```
-
-### Using Custom NuGet Server
-
-```bash
-export NUGET_SERVER=https://my-nuget-server.com/v3/index.json
-export NUGET_API_KEY=your-api-key
-ducky nuget push ./mods/MyMod.1.0.0.nupkg
-```
-
-## Error Handling
-
-The tool provides helpful error messages with suggestions:
-
-```
-✖ Invalid version format: 1.0
-
-Suggestions:
-  • Version must follow SemVer 2.0 format
-  • Examples: 1.0.0, 2.1.0-beta, 3.0.0-rc.1
-```
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Related Projects
-
-- [action-ducky-nuget](https://github.com/ducky7go/action-ducky-nuget) - GitHub Action for CI/CD
-- [NuGet Mod Packaging Specification](https://github.com/ducky7go/dukcy-package-spec) - Specification for mod packaging
-
-## Support
-
-- Report bugs: [GitHub Issues](https://github.com/ducky7go/ducky-cli/issues)
-- Documentation: [GitHub Wiki](https://github.com/ducky7go/ducky-cli/wiki)
+- 报告问题：[GitHub Issues](https://github.com/ducky7go/ducky-cli/issues)

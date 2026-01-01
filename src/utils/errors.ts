@@ -76,3 +76,58 @@ export class NuGetError extends DuckyError {
     this.name = 'NuGetError';
   }
 }
+
+/**
+ * Error raised when Steam operations fail
+ */
+export class SteamError extends DuckyError {
+  constructor(message: string, suggestions?: string[]) {
+    super(message, 'STEAM_ERROR', suggestions);
+    this.name = 'SteamError';
+  }
+}
+
+/**
+ * Error raised when Steam authentication fails
+ */
+export class SteamAuthError extends SteamError {
+  constructor(message: string, suggestions?: string[]) {
+    super(message, suggestions);
+    Object.defineProperty(this, 'code', {
+      value: 'STEAM_AUTH_ERROR',
+      enumerable: true,
+      writable: false,
+    });
+    this.name = 'SteamAuthError';
+  }
+}
+
+/**
+ * Error raised when Steam upload fails
+ */
+export class SteamUploadError extends SteamError {
+  constructor(message: string, suggestions?: string[]) {
+    super(message, suggestions);
+    Object.defineProperty(this, 'code', {
+      value: 'STEAM_UPLOAD_ERROR',
+      enumerable: true,
+      writable: false,
+    });
+    this.name = 'SteamUploadError';
+  }
+}
+
+/**
+ * Error raised when Steam configuration is invalid
+ */
+export class SteamConfigError extends SteamError {
+  constructor(message: string, suggestions?: string[]) {
+    super(message, suggestions);
+    Object.defineProperty(this, 'code', {
+      value: 'STEAM_CONFIG_ERROR',
+      enumerable: true,
+      writable: false,
+    });
+    this.name = 'SteamConfigError';
+  }
+}

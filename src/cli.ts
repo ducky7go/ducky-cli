@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { registerNuGetCommands } from './commands/nuget/index.js';
+import { registerSteamCommands } from './commands/steam/index.js';
 
 // Create the main program
 const program = new Command();
@@ -12,6 +13,7 @@ program
 
 // Register format namespaces
 registerNuGetCommands(program);
+registerSteamCommands(program);
 
 // Future formats can be registered here:
 // registerZipCommands(program);

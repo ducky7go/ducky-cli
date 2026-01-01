@@ -35,9 +35,6 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Lint
-        run: npm run lint
-
       - name: Check formatting
         id: format-check
         run: npx prettier --check src

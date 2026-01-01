@@ -1,0 +1,54 @@
+# PR Check GitHub Action
+# Validates pull requests through TypeScript compilation, tests, linting, and formatting
+
+name: PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  pr-check:
+    name: Validate Pull Request
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (TypeScript compilation)
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        id: format-check
+        run: npx prettier --check src
+        continue-on-error: true
+
+      - name: Auto-fix formatting
+        if: steps.format-check.outcome == 'failure'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          npx prettier --write src
+          git add src
+          git commit -m "style: auto-fix formatting [skip ci]"
+          git push

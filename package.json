@@ -1,0 +1,62 @@
+{
+  "name": "ducky-cli",
+  "version": "0.1.0",
+  "description": "CLI tool for packaging and publishing game mods to NuGet",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "ducky": "bin/ducky"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest",
+    "lint": "eslint src",
+    "format": "prettier --write src",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "nuget",
+    "cli",
+    "game-mods",
+    "packaging",
+    "ducky"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ducky7go/ducky-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ducky7go/ducky-cli/issues"
+  },
+  "homepage": "https://github.com/ducky7go/ducky-cli#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^25.0.3",
+    "eslint": "^9.0.0",
+    "prettier": "^3.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.51.0",
+    "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "dotenv": "^17.2.3",
+    "fs-extra": "^11.2.0",
+    "ini": "^4.1.0",
+    "ora": "^8.0.0"
+  }
+}

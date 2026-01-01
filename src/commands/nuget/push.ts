@@ -1,0 +1,127 @@
+import { Command } from 'commander';
+import { resolve } from 'path';
+import { fileExists } from '../../utils/fs.js';
+import { createLogger, resolveConfig, getApiKey, getServerUrl, LogLevel } from '../../utils/index.js';
+import { parseInfoIni, generateNuspec, collectFilesForPackage, validateMod } from '../../formats/nuget/index.js';
+import { NuGetCliManager } from '../../formats/nuget/client.js';
+import { FileSystemError, ValidationError, ConfigError } from '../../utils/errors.js';
+
+const logger = createLogger();
+
+/**
+ * T17: Implement nuget push command
+ * Publishes a .nupkg file to a NuGet server
+ */
+export const nugetPushCommand = new Command('push')
+  .description('Publish a .nupkg file to a NuGet server')
+  .argument('<path>', 'Path to .nupkg file or mod directory (with --pack)')
+  .option('-p, --pack', 'Package the mod before pushing')
+  .option('-s, --server <url>', 'NuGet server URL')
+  .option('-k, --api-key <key>', 'NuGet API key')
+  .option('-o, --output <path>', 'Output directory for .nupkg file (when using --pack)')
+  .option('-v, --verbose', 'Enable verbose output')
+  .action(async (path: string, options) => {
+    try {
+      // Configure logger
+      if (options.verbose) {
+        logger.setLevel(LogLevel.DEBUG);
+      }
+
+      let nupkgPath: string;
+
+      // If --pack flag is used, first pack the mod
+      if (options.pack) {
+        logger.header('NuGet Push (with Pack)');
+        const modPath = resolve(path);
+        const outputPath = options.output ? resolve(options.output) : modPath;
+
+        logger.info(`Mod path: ${modPath}`);
+        logger.info(`Output path: ${outputPath}`);
+
+        // Parse metadata
+        logger.info('Parsing info.ini...');
+        const metadata = await parseInfoIni(modPath);
+        logger.success(`Parsed: ${metadata.name} v${metadata.version}`);
+
+        // Validate mod
+        logger.info('Validating mod...');
+        const validation = await validateMod(modPath, metadata);
+        if (!validation.valid) {
+          logger.error('Validation failed:');
+          for (const error of validation.errors) {
+            logger.error(error);
+          }
+          throw new ValidationError('Mod validation failed');
+        }
+        logger.success('Validation passed');
+
+        // Generate .nuspec
+        logger.info('Generating .nuspec file...');
+        const { generateNuspec } = await import('../../formats/nuget/nuspec.js');
+        const nuspecContent = generateNuspec(metadata);
+        const { writeFile } = await import('fs/promises');
+        const { join } = await import('path');
+        const nuspecPath = join(modPath, `${metadata.name}.nuspec`);
+        await writeFile(nuspecPath, nuspecContent, 'utf-8');
+        logger.success('Generated .nuspec file');
+
+        // Pack using NuGet CLI
+        const { mkdir } = await import('fs/promises');
+        await mkdir(outputPath, { recursive: true });
+
+        const client = new NuGetCliManager();
+        nupkgPath = await client.pack(nuspecPath, outputPath);
+        logger.success(`Package created: ${nupkgPath}`);
+      } else {
+        // Verify .nupkg file exists
+        nupkgPath = resolve(path);
+        if (!(await fileExists(nupkgPath))) {
+          throw new FileSystemError(
+            `.nupkg file not found: ${nupkgPath}`,
+            [
+              'Check that the path is correct',
+              'Use --pack flag to package a mod directory before pushing',
+            ],
+          );
+        }
+        logger.header('NuGet Push');
+        logger.info(`Package path: ${nupkgPath}`);
+      }
+
+      // Load configuration
+      const config = resolveConfig({
+        server: options.server,
+        apiKey: options.apiKey,
+        verbose: options.verbose,
+      });
+
+      const server = getServerUrl(config);
+      const apiKey = getApiKey(config);
+
+      logger.info(`Server: ${server}`);
+      logger.info(`API Key: ${apiKey ? '***' + apiKey.slice(-4) : '(none)'}`);
+
+      // Push using NuGet CLI
+      logger.blank();
+      logger.info('Pushing package...');
+
+      const client = new NuGetCliManager();
+      await client.push(nupkgPath, server, apiKey);
+
+      logger.blank();
+      logger.success('Package pushed successfully!');
+    } catch (error) {
+      if (
+        error instanceof FileSystemError ||
+        error instanceof ValidationError ||
+        error instanceof ConfigError
+      ) {
+        logger.error(error);
+        process.exit(1);
+      } else if (error instanceof Error) {
+        logger.error(error.message);
+        process.exit(1);
+      }
+      throw error;
+    }
+  });

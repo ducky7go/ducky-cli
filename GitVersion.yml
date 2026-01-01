@@ -1,0 +1,27 @@
+branches:
+  main:
+    mode: ContinuousDelivery
+    regex: ^main$
+    label: "dev"
+    increment: Patch
+    prevent-increment:
+      of-merged-branch: true
+      when-current-commit-tagged: true
+    track-merge-target: false
+    is-main-branch: true
+  feature:
+    regex: ^features?[/-](?<BranchName>.+)
+    label: "{BranchName}"
+    increment: Minor
+    prevent-increment:
+      when-current-commit-tagged: false
+    source-branches: ["main"]
+  develop:
+    regex: ^dev(elop)?(ment)?$
+    label: "alpha"
+    increment: Minor
+    prevent-increment:
+      when-current-commit-tagged: false
+    track-merge-target: true
+ignore:
+  sha: []

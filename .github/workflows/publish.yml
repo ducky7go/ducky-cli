@@ -143,6 +143,7 @@ jobs:
         with:
           node-version: 22.x
           cache: "npm"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Update package version
         run: npm version ${{ steps.get_version.outputs.version }} --no-git-tag-version

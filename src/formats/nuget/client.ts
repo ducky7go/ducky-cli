@@ -139,13 +139,16 @@ export class NuGetCliManager {
   async execute(args: string[], cwd?: string): Promise<string> {
     const exePath = await this.getExePath();
 
-    logger.debug(`Executing: ${exePath} ${args.join(' ')}`);
+    // On non-Windows platforms, use mono to run nuget.exe
+    const command = this.platform === 'win32' ? exePath : 'mono';
+    const commandArgs = this.platform === 'win32' ? args : [exePath, ...args];
+
+    logger.debug(`Executing: ${command} ${commandArgs.join(' ')}`);
 
     return new Promise((resolve, reject) => {
-      const child = spawn(exePath, args, {
+      const child = spawn(command, commandArgs, {
         cwd,
         stdio: ['inherit', 'pipe', 'pipe'],
-        shell: true,
       });
 
       let stdout = '';
@@ -177,13 +180,19 @@ export class NuGetCliManager {
    * T14: Pack a .nuspec file into a .nupkg package
    * @param nuspecPath - Path to .nuspec file
    * @param outputPath - Directory for output .nupkg file
+   * @param basePath - Base path for resolving file references (default: nuspec directory)
    * @returns Path to created .nupkg file
    */
-  async pack(nuspecPath: string, outputPath: string): Promise<string> {
+  async pack(nuspecPath: string, outputPath: string, basePath?: string): Promise<string> {
     logger.info(`Creating NuGet package from ${nuspecPath}...`);
 
     const outputDir = resolve(outputPath);
     const args = ['pack', nuspecPath, '-OutputDirectory', outputDir, '-NoDefaultExcludes'];
+
+    // Add -BasePath if specified (resolves file paths relative to this directory)
+    if (basePath) {
+      args.push('-BasePath', resolve(basePath));
+    }
 
     try {
       const stdout = await this.execute(args);

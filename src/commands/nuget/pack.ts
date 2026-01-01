@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { resolve, join, basename } from 'path';
+import { resolve, join, basename, relative } from 'path';
 import { writeFile, mkdir } from 'fs/promises';
 import { createLogger, resolveConfig, LogLevel } from '../../utils/index.js';
 import {
@@ -7,6 +7,8 @@ import {
   generateNuspec,
   collectFilesForPackage,
   validateMod,
+  loadDescription,
+  loadReleaseNotes,
 } from '../../formats/nuget/index.js';
 import { NuGetCliManager } from '../../formats/nuget/client.js';
 import { FileSystemError, ValidationError } from '../../utils/errors.js';
@@ -30,7 +32,10 @@ export const nugetPackCommand = new Command('pack')
       }
 
       const modPath = resolve(path);
-      const outputPath = options.output ? resolve(options.output) : modPath;
+      // Default output to project root pkg directory
+      const projectRoot = process.cwd();
+      const defaultOutputPath = join(projectRoot, 'pkg');
+      const outputPath = options.output ? resolve(options.output) : defaultOutputPath;
 
       logger.header('NuGet Pack');
       logger.info(`Mod path: ${modPath}`);
@@ -53,10 +58,33 @@ export const nugetPackCommand = new Command('pack')
       }
       logger.success('Validation passed');
 
+      // Ensure output directory exists
+      await mkdir(outputPath, { recursive: true });
+
+      // Load description (README)
+      logger.info('Loading description...');
+      const longDescription = await loadDescription(modPath, metadata);
+      logger.success(`Loaded description: ${longDescription.length} characters`);
+
+      // Write README.md to pkg directory if description was loaded
+      let readmeFilePath = '';
+      if (longDescription && longDescription.length > 0) {
+        const readmePath = join(outputPath, 'README.md');
+        await writeFile(readmePath, longDescription, 'utf-8');
+        // Compute relative path from modPath to outputPath
+        readmeFilePath = join(relative(modPath, outputPath), 'README.md');
+        logger.info('Generated README.md in pkg directory');
+      }
+
+      // Load release notes
+      logger.info('Loading release notes...');
+      const releaseNotes = await loadReleaseNotes(modPath, metadata);
+      logger.success(`Loaded release notes: ${releaseNotes.length} characters`);
+
       // Generate .nuspec
       logger.info('Generating .nuspec file...');
-      const nuspecContent = generateNuspec(metadata);
-      const nuspecPath = join(modPath, `${metadata.name}.nuspec`);
+      const nuspecContent = await generateNuspec(metadata, readmeFilePath, releaseNotes);
+      const nuspecPath = join(outputPath, `${metadata.name}.nuspec`);
       await writeFile(nuspecPath, nuspecContent, 'utf-8');
       logger.success(`Generated: ${basename(nuspecPath)}`);
 
@@ -69,12 +97,9 @@ export const nugetPackCommand = new Command('pack')
       });
       logger.success(`Found ${files.length} files`);
 
-      // Ensure output directory exists
-      await mkdir(outputPath, { recursive: true });
-
       // Pack using NuGet CLI
       const client = new NuGetCliManager();
-      const nupkgPath = await client.pack(nuspecPath, outputPath);
+      const nupkgPath = await client.pack(nuspecPath, outputPath, modPath);
 
       logger.blank();
       logger.success(`Package created: ${nupkgPath}`);

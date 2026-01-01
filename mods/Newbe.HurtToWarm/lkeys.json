@@ -1,0 +1,22 @@
+
+{
+  "namespace": "Newbe.HurtToWarm",
+  "hash": "c27794981abd82b5bbda7318a37a792113776072c4164865a38a51c594421752",
+  "keyCount": 2,
+  "supportedLanguages": [
+    "en",
+    "zh-hant",
+    "zh",
+    "fr",
+    "de",
+    "es",
+    "ru",
+    "ja",
+    "ko",
+    "pt"
+  ],
+  "keys": [
+    "hw_ui_buff_hurt_to_warm_desc",
+    "hw_ui_buff_hurt_to_warm_name"
+  ]
+}

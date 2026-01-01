@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import { resolve } from 'path';
+import { resolve, join, relative } from 'path';
 import { fileExists } from '../../utils/fs.js';
 import { createLogger, resolveConfig, getApiKey, getServerUrl, LogLevel } from '../../utils/index.js';
-import { parseInfoIni, generateNuspec, collectFilesForPackage, validateMod } from '../../formats/nuget/index.js';
+import { parseInfoIni, generateNuspec, collectFilesForPackage, validateMod, loadDescription, loadReleaseNotes } from '../../formats/nuget/index.js';
 import { NuGetCliManager } from '../../formats/nuget/client.js';
 import { FileSystemError, ValidationError, ConfigError } from '../../utils/errors.js';
 
@@ -33,7 +33,11 @@ export const nugetPushCommand = new Command('push')
       if (options.pack) {
         logger.header('NuGet Push (with Pack)');
         const modPath = resolve(path);
-        const outputPath = options.output ? resolve(options.output) : modPath;
+        // Default output to project root pkg directory
+        const { join } = await import('path');
+        const projectRoot = process.cwd();
+        const defaultOutputPath = join(projectRoot, 'pkg');
+        const outputPath = options.output ? resolve(options.output) : defaultOutputPath;
 
         logger.info(`Mod path: ${modPath}`);
         logger.info(`Output path: ${outputPath}`);
@@ -55,22 +59,39 @@ export const nugetPushCommand = new Command('push')
         }
         logger.success('Validation passed');
 
-        // Generate .nuspec
-        logger.info('Generating .nuspec file...');
-        const { generateNuspec } = await import('../../formats/nuget/nuspec.js');
-        const nuspecContent = generateNuspec(metadata);
-        const { writeFile } = await import('fs/promises');
-        const { join } = await import('path');
-        const nuspecPath = join(modPath, `${metadata.name}.nuspec`);
+        // Pack using NuGet CLI
+        const { mkdir, writeFile } = await import('fs/promises');
+        await mkdir(outputPath, { recursive: true });
+
+        // Load description (README)
+        logger.info('Loading description...');
+        const longDescription = await loadDescription(modPath, metadata);
+        logger.success(`Loaded description: ${longDescription.length} characters`);
+
+        // Write README.md to pkg directory if description was loaded
+        let readmeFilePath = '';
+        if (longDescription && longDescription.length > 0) {
+          const readmePath = join(outputPath, 'README.md');
+          await writeFile(readmePath, longDescription, 'utf-8');
+          // Compute relative path from modPath to outputPath
+          readmeFilePath = join(relative(modPath, outputPath), 'README.md');
+          logger.info('Generated README.md in pkg directory');
+        }
+
+        // Load release notes
+        logger.info('Loading release notes...');
+        const releaseNotes = await loadReleaseNotes(modPath, metadata);
+        logger.success(`Loaded release notes: ${releaseNotes.length} characters`);
+
+        // Generate .nuspec from template
+        logger.info('Generating .nuspec file from template...');
+        const nuspecPath = join(outputPath, `${metadata.name}.nuspec`);
+        const nuspecContent = await generateNuspec(metadata, readmeFilePath, releaseNotes);
         await writeFile(nuspecPath, nuspecContent, 'utf-8');
         logger.success('Generated .nuspec file');
 
-        // Pack using NuGet CLI
-        const { mkdir } = await import('fs/promises');
-        await mkdir(outputPath, { recursive: true });
-
         const client = new NuGetCliManager();
-        nupkgPath = await client.pack(nuspecPath, outputPath);
+        nupkgPath = await client.pack(nuspecPath, outputPath, modPath);
         logger.success(`Package created: ${nupkgPath}`);
       } else {
         // Verify .nupkg file exists

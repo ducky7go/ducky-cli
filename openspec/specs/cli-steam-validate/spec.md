@@ -59,6 +59,35 @@ The system SHALL provide a `ducky steam validate` command that validates Steam W
     - "Supported formats: PNG, JPG"
   - Exit with code 1
 
+#### Scenario: Validate with multiple DLLs where one matches mod name
+- **GIVEN** a directory with `info.ini` containing `name=MyMod`
+- **AND** the directory contains `MyMod.dll` and `Dependency.dll`
+- **WHEN** the user runs `ducky steam validate ./mods/MyMod`
+- **THEN** the command should:
+  - Display "✔ All validations passed!"
+  - Exit with code 0
+
+#### Scenario: Validate with multiple DLLs where none match mod name
+- **GIVEN** a directory with `info.ini` containing `name=MyMod`
+- **AND** the directory contains `FirstDll.dll` and `SecondDll.dll` (neither matches)
+- **WHEN** the user runs `ducky steam validate ./mods/MyMod`
+- **THEN** the command should:
+  - Display "✖ No DLL file matches mod name "MyMod" (found 2 DLLs)"
+  - Display suggestions:
+    - "Ensure at least one DLL is named "MyMod.dll""
+    - "Current DLLs: FirstDll.dll, SecondDll.dll"
+  - Exit with code 1
+
+#### Scenario: Validate with no DLL files present
+- **GIVEN** a directory with `info.ini` but no `.dll` files
+- **WHEN** the user runs `ducky steam validate ./mods/NoDll`
+- **THEN** the command should:
+  - Display "✖ No DLL files found in mod directory"
+  - Display suggestions:
+    - "Add at least one DLL file to the mod"
+    - "DLL files are required for game mods"
+  - Exit with code 1
+
 #### Scenario: Validate with custom Steam App ID
 - **GIVEN** a valid mod directory
 - **AND** environment variable `STEAM_APP_ID=123456`
@@ -93,4 +122,52 @@ The system SHALL support the following options for the `ducky steam validate` co
 - **GIVEN** the help system
 - **WHEN** the user runs `ducky steam validate --help`
 - **THEN** all options should be documented with their types and defaults
+
+### Requirement: Validate DLL name matches info.ini name field
+
+The CLI MUST verify that at least one `.dll` file in the mod directory has a base name matching the `name` field in `info.ini`. A mod package may contain multiple DLL files; only one needs to match the package name.
+
+#### Scenario: Matching DLL name
+
+**Given** an `info.ini` with `name=MyMod` and a file `MyMod.dll`
+**When** the CLI runs `ducky steam validate ./mods/MyMod`
+**Then** validation should pass for the DLL name check
+
+#### Scenario: Multiple DLLs with one matching
+
+**Given** an `info.ini` with `name=MyMod` and files `MyMod.dll`, `Dependency.dll` exist
+**When** the CLI runs `ducky steam validate ./mods/MyMod`
+**Then** validation should pass (at least one DLL matches)
+
+#### Scenario: Non-matching DLL name
+
+**Given** an `info.ini** with `name=MyMod` but only `OtherMod.dll` exists
+**When** the CLI runs `ducky steam validate ./mods/MyMod`
+**Then** validation should fail with an error indicating the DLL name mismatch
+
+#### Scenario: No DLL files present
+
+**Given** a mod directory with no `.dll` files
+**When** the CLI runs `ducky steam validate ./mods/MyMod`
+**Then** validation should fail with an error indicating no DLL was found
+
+#### Scenario: Case-insensitive matching
+
+**Given** an `info.ini** with `name=mymod` and a file `MyMod.dll`
+**When** the CLI runs `ducky steam validate ./mods/MyMod`
+**Then** validation should pass (case-insensitive comparison)
+
+---
+
+### Requirement: Provide helpful error message listing all DLLs
+
+When DLL name validation fails for Steam Workshop, the CLI MUST list all DLL files found in the error message to help users identify which files are present.
+
+#### Scenario: Error lists all DLL names
+
+**Given** an `info.ini** with `name=MyMod` but only `OtherMod.dll` and `Helper.dll` exist
+**When** the CLI runs `ducky steam validate ./mods/MyMod`
+**Then** the error message should list "OtherMod.dll, Helper.dll" and suggest renaming one to match the package name
+
+---
 

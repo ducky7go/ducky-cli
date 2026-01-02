@@ -18,6 +18,210 @@ describe('Parser', () => {
     await rm(tempDir, { recursive: true, force: true });
   });
 
+  describe('parseInfoIniContent - tag parsing', () => {
+    it('should parse comma-separated tags', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=tag1,tag2,tag3
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['tag1', 'tag2', 'tag3']);
+    });
+
+    it('should parse quoted tags with spaces (comma-separated)', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags="tag with spaces",another-tag
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['tag with spaces', 'another-tag']);
+    });
+
+    it('should parse mixed quoted and unquoted tags (comma-separated)', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags="quoted tag",normal-tag,"another quoted tag"
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['quoted tag', 'normal-tag', 'another quoted tag']);
+    });
+
+    it('should handle empty tag values', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toBeUndefined();
+    });
+
+    it('should parse single quoted tag with spaces', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags="single tag with spaces"
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['single tag with spaces']);
+    });
+
+    it('should parse comma-separated tags with spaces around commas', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=tag1 , tag2 , tag3
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['tag1', 'tag2', 'tag3']);
+    });
+
+    it('should parse quoted tags with spaces and normal tags', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=Cities: Skylines,Update,Economy, "Items & Things"
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['Cities: Skylines', 'Update', 'Economy', 'Items & Things']);
+    });
+
+    it('should handle trailing comma in tags', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=tag1,tag2,tag3,
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['tag1', 'tag2', 'tag3']);
+    });
+
+    it('should handle empty tags between commas', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=tag1,,tag2
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['tag1', 'tag2']);
+    });
+
+    it('should handle tags with special characters', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=Cities: Skylines,Items & Things,"Test@Home"
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['Cities: Skylines', 'Items & Things', 'Test@Home']);
+    });
+
+    it('should handle tags with only spaces (trim them)', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=tag1,   ,tag2
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['tag1', 'tag2']);
+    });
+
+    it('should handle quoted tag with leading/trailing spaces', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags= "quoted tag" , normal
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['quoted tag', 'normal']);
+    });
+
+    it('should not support escaped quotes (backslash is literal)', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags="tag with \\"quotes\\"", another-tag
+`;
+      const metadata = parseInfoIniContent(content);
+      // Backslash-escaped quotes are not supported - they are treated as literal
+      expect(metadata.tags).toEqual(['tag with \\"quotes\\"', 'another-tag']);
+    });
+
+    it('should handle dependencies field same as tags (comma-separated)', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+dependencies=dep1,dep2,dep3
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.dependencies).toEqual(['dep1', 'dep2', 'dep3']);
+    });
+
+    it('should handle quoted dependencies with spaces', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+dependencies="Some Dependency:1.0.0","Another One"
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.dependencies).toEqual(['Some Dependency:1.0.0', 'Another One']);
+    });
+
+    it('should handle unclosed quotes (treat remaining as literal)', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=tag1,"unclosed,tag2
+`;
+      const metadata = parseInfoIniContent(content);
+      // When quotes are unclosed, the quote char is treated as literal
+      expect(metadata.tags).toEqual(['tag1', 'unclosed,tag2']);
+    });
+
+    it('should handle multiple consecutive commas in tags', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=tag1,,,tag2
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['tag1', 'tag2']);
+    });
+
+    it('should handle tags with unicode characters', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags="中文标签",日本語,한국어
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['中文标签', '日本語', '한국어']);
+    });
+
+    it('should handle tags with numbers', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=tag1,tag2,tag3,1234
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['tag1', 'tag2', 'tag3', '1234']);
+    });
+
+    it('should handle hyphenated tags', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+tags=well-formed-tag,another-tag
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.tags).toEqual(['well-formed-tag', 'another-tag']);
+    });
+  });
+
   describe('parseInfoIniContent - INI parsing', () => {
     it('should handle ini with sections', () => {
       const content = `
@@ -32,46 +236,6 @@ author=TestAuthor
       expect(metadata.version).toBe('1.0.0');
       // author should not be parsed from non-default section
       expect(metadata.author).toBeUndefined();
-    });
-
-    it('should parse list field with single item', () => {
-      const content = `
-name=TestMod
-version=1.0.0
-tags=single
-`;
-      const metadata = parseInfoIniContent(content);
-      expect(metadata.tags).toEqual(['single']);
-    });
-
-    it('should parse list field with trailing comma', () => {
-      const content = `
-name=TestMod
-version=1.0.0
-tags=item1,item2,
-`;
-      const metadata = parseInfoIniContent(content);
-      expect(metadata.tags).toEqual(['item1', 'item2']);
-    });
-
-    it('should parse list with spaces', () => {
-      const content = `
-name=TestMod
-version=1.0.0
-tags=item1 , item2 , item3
-`;
-      const metadata = parseInfoIniContent(content);
-      expect(metadata.tags).toEqual(['item1', 'item2', 'item3']);
-    });
-
-    it('should handle empty list values', () => {
-      const content = `
-name=TestMod
-version=1.0.0
-tags=
-`;
-      const metadata = parseInfoIniContent(content);
-      expect(metadata.tags).toBeUndefined();
     });
 
     it('should trim whitespace from field values', () => {

@@ -88,4 +88,45 @@ describe('Nuspec Generation', () => {
       expect(nuspec).toContain('<releaseNotes><![CDATA[');
     });
   });
+
+  describe('Tags formatting', () => {
+    it('should replace spaces in tags with hyphens for NuGet compatibility', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '1.0.0',
+        tags: ['Cities: Skylines', 'Update', 'Items & Things'],
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<tags>Cities:-Skylines Update Items-&amp;-Things duckymod game-mod</tags>');
+    });
+
+    it('should handle tags with multiple spaces', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '1.0.0',
+        tags: ['Complex Tag With Spaces'],
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<tags>Complex-Tag-With-Spaces duckymod game-mod</tags>');
+    });
+
+    it('should use default tags when no tags provided', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '1.0.0',
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<tags>duckymod game-mod</tags>');
+    });
+
+    it('should handle single word tags without modification', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '1.0.0',
+        tags: ['update', 'economy', 'mod'],
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<tags>update economy mod duckymod game-mod</tags>');
+    });
+  });
 });

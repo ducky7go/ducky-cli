@@ -180,6 +180,25 @@ version=1.0.0
       expect(result.valid).toBe(false);
       expect(result.errors.length).toBeGreaterThan(0);
     });
+
+    it('should validate mod with multiple DLLs where one matches', async () => {
+      const multiDllPath = join(fixturesDir, 'multi-dll-one-matches');
+      const metadata = await parseInfoIni(multiDllPath);
+      const result = await validateMod(multiDllPath, metadata);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it('should fail validation for multiple DLLs where none match', async () => {
+      const multiDllPath = join(fixturesDir, 'multi-dll-none-match');
+      const metadata = await parseInfoIni(multiDllPath);
+      const result = await validateMod(multiDllPath, metadata);
+      expect(result.valid).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+      // Verify error mentions the DLL names
+      const errorMessages = result.errors.map((e) => e.message).join(' ');
+      expect(errorMessages).toContain('MultiDllNoMatch');
+    });
   });
 
   describe('Full Workflow', () => {

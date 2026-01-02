@@ -80,11 +80,13 @@ async function validateDllName(
     const dllNames = dllFiles
       .map((p) => p.split('/').pop() || p.split('\\').pop() || '')
       .join(', ');
+    const dllCount = dllFiles.length;
+    const dllPhrase = dllCount === 1 ? 'DLL' : 'DLLs';
     errors.push(
       new ValidationError(
-        `No DLL file matches mod name "${metadata.name}"`,
+        `No DLL file matches mod name "${metadata.name}" (found ${dllCount} ${dllPhrase})`,
         [
-          `Rename one of the DLLs to "${metadata.name}.dll"`,
+          `Ensure at least one DLL is named "${metadata.name}.dll"`,
           `Current DLLs: ${dllNames}`,
         ],
       ),

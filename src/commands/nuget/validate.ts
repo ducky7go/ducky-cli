@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { createLogger, LogLevel } from '../../utils/index.js';
 import { parseInfoIni, validateMod } from '../../formats/nuget/index.js';
 import { FileSystemError } from '../../utils/errors.js';
+import { collectFiles } from '../../utils/fs.js';
 
 const logger = createLogger();
 
@@ -45,6 +46,19 @@ export const nugetValidateCommand = new Command('validate')
       }
       if (metadata.tags && metadata.tags.length > 0) {
         logger.info(`  Tags: ${metadata.tags.join(', ')}`);
+      }
+
+      // Show DLL files in verbose mode
+      if (options.verbose) {
+        const dllFiles = await collectFiles(modPath, /\.dll$/i);
+        logger.blank();
+        logger.info(`DLL files found (${dllFiles.length}):`);
+        for (const dllPath of dllFiles) {
+          const fileName = dllPath.split('/').pop() || dllPath.split('\\').pop() || '';
+          const isMatch = fileName.replace(/\.dll$/i, '') === metadata.name;
+          const matchIndicator = isMatch ? ' ✓' : '';
+          logger.info(`  • ${fileName}${matchIndicator}`);
+        }
       }
 
       // Validate mod

@@ -48,7 +48,9 @@ export async function generateNuspec(
 
   // Default tags (per spec: duckymod game-mod)
   const defaultTags = 'duckymod game-mod';
-  const tags = metadata.tags?.length ? metadata.tags.join(' ') + ' ' + defaultTags : defaultTags;
+  // Format tags for NuGet: replace spaces with hyphens since NuGet uses space as delimiter
+  const formattedTags = metadata.tags?.map(tag => tag.replace(/\s+/g, '-')) || [];
+  const tags = formattedTags.length ? formattedTags.join(' ') + ' ' + defaultTags : defaultTags;
 
   // Title: use displayName, fallback to name
   const title = metadata.displayName || metadata.name;

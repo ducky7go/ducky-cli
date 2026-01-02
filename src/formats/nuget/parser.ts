@@ -163,16 +163,51 @@ function parseIni(content: string): Record<string, Record<string, string>> {
 }
 
 /**
- * Parse a comma-separated list
+ * Parse a comma-separated list with support for quoted strings containing spaces.
+ * Comma (,) is the only valid delimiter. Space-only separation is not supported.
+ *
+ * Examples:
+ * - tags = tag1, tag2, tag3
+ * - tags = "tag with spaces", another-tag
+ * - tags = "quoted tag", normal-tag, "another quoted tag"
+ *
+ * @param value - Raw comma-separated value
+ * @returns Array of parsed items, or undefined if input is empty/undefined
  */
 function parseList(value?: string): string[] | undefined {
   if (!value) {
     return undefined;
   }
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
+
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < value.length; i++) {
+    const char = value[i];
+
+    if (char === '"' && (i === 0 || value[i - 1] !== '\\')) {
+      // Toggle quote state
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      // Comma delimiter outside quotes - end of current item
+      const trimmed = current.trim();
+      if (trimmed.length > 0) {
+        result.push(trimmed);
+      }
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  // Add the last item
+  const trimmed = current.trim();
+  if (trimmed.length > 0) {
+    result.push(trimmed);
+  }
+
+  return result;
 }
 
 /**

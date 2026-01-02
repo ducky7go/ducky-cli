@@ -123,9 +123,18 @@ OtherMod=1.0.0
 - `author` - 包作者
 - `projectUrl` - 项目 URL
 - `license` - 许可证标识符
-- `tags` - 逗号分隔的标签列表
+- `tags` - 逗号分隔的标签列表（支持带空格的引用字符串）
 - `dependencies` - 逗号分隔的依赖列表（可带版本）
 - `publishedFileId` - Steam 创意工坊已发布文件 ID（首次 Steam 发布后自动添加）
+
+**标签格式说明：**
+- 标签必须使用逗号（`,`）作为唯一分隔符
+- 支持带空格的标签，使用双引号包裹
+- **重要**：生成 .nuspec 时，标签中的空格会被替换为连字符（`-`），因为 NuGet 使用空格作为标签分隔符
+- 示例：
+  - `tags=game,mod,example` - 普通标签（.nuspec 中：`game mod example`）
+  - `tags="Cities Skylines",Update,Economy` - 带空格的标签（.nuspec 中：`Cities-Skylines Update Economy`）
+  - `tags="multi word tag 1", "multi word tag 2"` - 多个带空格的标签（.nuspec 中：`multi-word-tag-1 multi-word-tag-2`）
 
 ## 验证规则
 

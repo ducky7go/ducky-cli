@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { mkdir, rm, writeFile } from 'fs/promises';
+import { mkdir, rm, writeFile, readFile } from 'fs/promises';
 import {
   DuckyError,
   ValidationError,
@@ -535,8 +535,11 @@ describe('Version Utility', () => {
     const version = await getVersion();
     expect(version).toBeDefined();
     expect(typeof version).toBe('string');
-    // Should match the version in package.json
-    expect(version).toBe('0.0.1');
+
+    // Read version from package.json for verification
+    const packageJsonPath = join(__dirname, '..', '..', 'package.json');
+    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf-8'));
+    expect(version).toBe(packageJson.version);
   });
 
   it('should handle missing version field gracefully', async () => {

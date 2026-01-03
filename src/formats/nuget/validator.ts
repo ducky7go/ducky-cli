@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, basename } from 'path';
 import { collectFiles } from '../../utils/fs.js';
 import type { ModMetadata } from './parser.js';
 import { ValidationError } from '../../utils/errors.js';
@@ -71,15 +71,13 @@ async function validateDllName(
   // Check if any DLL name matches the mod name
   const expectedDllName = metadata.name;
   const hasMatchingDll = dllFiles.some((dllPath) => {
-    const fileName = dllPath.split('/').pop() || dllPath.split('\\').pop() || '';
+    const fileName = basename(dllPath);
     const baseName = fileName.replace(/\.dll$/i, '');
     return baseName === expectedDllName;
   });
 
   if (!hasMatchingDll) {
-    const dllNames = dllFiles
-      .map((p) => p.split('/').pop() || p.split('\\').pop() || '')
-      .join(', ');
+    const dllNames = dllFiles.map((p) => basename(p)).join(', ');
     const dllCount = dllFiles.length;
     const dllPhrase = dllCount === 1 ? 'DLL' : 'DLLs';
     errors.push(

@@ -2,25 +2,35 @@
 import { Command } from 'commander';
 import { registerNuGetCommands } from './commands/nuget/index.js';
 import { registerSteamCommands } from './commands/steam/index.js';
+import { getVersion } from './utils/version.js';
 
-// Create the main program
-const program = new Command();
+// Initialize CLI with dynamic version
+async function main() {
+  // Create the main program
+  const program = new Command();
 
-program
-  .name('ducky')
-  .description('CLI tool for packaging and publishing game mods')
-  .version('0.1.0');
+  // Get version from package.json
+  const version = await getVersion();
 
-// Register format namespaces
-registerNuGetCommands(program);
-registerSteamCommands(program);
+  program
+    .name('ducky')
+    .description('CLI tool for packaging and publishing game mods')
+    .version(version);
 
-// Future formats can be registered here:
-// registerZipCommands(program);
-// registerTarCommands(program);
+  // Register format namespaces
+  registerNuGetCommands(program);
+  registerSteamCommands(program);
 
-// Parse arguments
-program.parse(process.argv);
+  // Future formats can be registered here:
+  // registerZipCommands(program);
+  // registerTarCommands(program);
+
+  // Parse arguments
+  program.parse(process.argv);
+
+  // Export for testing
+  return { program };
+}
 
 // Export for testing
-export { program };
+export const { program } = await main();

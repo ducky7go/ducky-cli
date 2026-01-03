@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { resolve } from 'path';
+import { resolve, basename } from 'path';
 import { createLogger, LogLevel } from '../../utils/index.js';
 import { parseInfoIni, validateMod } from '../../formats/nuget/index.js';
 import { FileSystemError } from '../../utils/errors.js';
@@ -54,7 +54,7 @@ export const nugetValidateCommand = new Command('validate')
         logger.blank();
         logger.info(`DLL files found (${dllFiles.length}):`);
         for (const dllPath of dllFiles) {
-          const fileName = dllPath.split('/').pop() || dllPath.split('\\').pop() || '';
+          const fileName = basename(dllPath);
           const isMatch = fileName.replace(/\.dll$/i, '') === metadata.name;
           const matchIndicator = isMatch ? ' ✓' : '';
           logger.info(`  • ${fileName}${matchIndicator}`);

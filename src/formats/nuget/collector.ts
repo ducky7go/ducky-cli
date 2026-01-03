@@ -1,4 +1,4 @@
-import { join, relative } from 'path';
+import { join, relative, basename } from 'path';
 import { collectFiles, fileExists, directoryExists } from '../../utils/fs.js';
 import { ValidationError } from '../../utils/errors.js';
 
@@ -83,7 +83,7 @@ export async function collectFilesForPackage(
     }
 
     // Skip if excluded
-    const fileName = target.split('/').pop() || target;
+    const fileName = basename(target);
     if (excludedPatterns.some((pattern) => pattern.test(fileName))) {
       continue;
     }

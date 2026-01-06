@@ -3,6 +3,58 @@ import { generateNuspec } from '../../src/formats/nuget/nuspec.js';
 import type { ModMetadata } from '../../src/formats/nuget/parser.js';
 
 describe('Nuspec Generation', () => {
+  describe('Version handling', () => {
+    it('should preserve dev version format (0.1.2-dev.1) in nuspec', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '0.1.2-dev.1',
+        description: 'Test mod',
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<version>0.1.2-dev.1</version>');
+    });
+
+    it('should preserve dev version format (1.0.0-dev.2) in nuspec', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '1.0.0-dev.2',
+        description: 'Test mod',
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<version>1.0.0-dev.2</version>');
+    });
+
+    it('should preserve pre-release version (2.1.0-beta) in nuspec', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '2.1.0-beta',
+        description: 'Test mod',
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<version>2.1.0-beta</version>');
+    });
+
+    it('should preserve version with build metadata (3.0.0-rc.1+build.123) in nuspec', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '3.0.0-rc.1+build.123',
+        description: 'Test mod',
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<version>3.0.0-rc.1+build.123</version>');
+    });
+
+    it('should preserve standard SemVer version (1.0.0) in nuspec', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '1.0.0',
+        description: 'Test mod',
+      };
+      const nuspec = await generateNuspec(metadata);
+      expect(nuspec).toContain('<version>1.0.0</version>');
+    });
+  });
+
   describe('Optional metadata fields', () => {
     it('should include project URL block when projectUrl is provided', async () => {
       const metadata: ModMetadata = {

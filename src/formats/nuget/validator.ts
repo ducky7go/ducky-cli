@@ -105,7 +105,7 @@ function validateSemVer(version: string, errors: ValidationError[]): void {
         `Invalid version format: ${version}`,
         [
           'Version must follow SemVer 2.0 format',
-          'Examples: 1.0.0, 2.1.0-beta, 3.0.0-rc.1+build.123',
+          'Examples: 1.0.0, 2.1.0-beta, 3.0.0-rc.1+build.123, 0.1.2-dev.1, 1.0.0-dev.2',
         ],
       ),
     );

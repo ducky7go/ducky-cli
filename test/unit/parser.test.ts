@@ -222,6 +222,71 @@ tags=well-formed-tag,another-tag
     });
   });
 
+  describe('parseInfoIniContent - version parsing', () => {
+    it('should parse dev version format (0.1.2-dev.1)', () => {
+      const content = `
+name=TestMod
+version=0.1.2-dev.1
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.version).toBe('0.1.2-dev.1');
+    });
+
+    it('should parse dev version format (1.0.0-dev.2)', () => {
+      const content = `
+name=TestMod
+version=1.0.0-dev.2
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.version).toBe('1.0.0-dev.2');
+    });
+
+    it('should parse dev version format with multi-digit (2.0.0-dev.10)', () => {
+      const content = `
+name=TestMod
+version=2.0.0-dev.10
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.version).toBe('2.0.0-dev.10');
+    });
+
+    it('should parse mixed pre-release format (1.0.0-beta.dev.1)', () => {
+      const content = `
+name=TestMod
+version=1.0.0-beta.dev.1
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.version).toBe('1.0.0-beta.dev.1');
+    });
+
+    it('should parse version with build metadata (3.0.0-rc.1+build.123)', () => {
+      const content = `
+name=TestMod
+version=3.0.0-rc.1+build.123
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.version).toBe('3.0.0-rc.1+build.123');
+    });
+
+    it('should parse standard SemVer versions', () => {
+      const content = `
+name=TestMod
+version=1.0.0
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.version).toBe('1.0.0');
+    });
+
+    it('should parse pre-release version (2.1.0-beta)', () => {
+      const content = `
+name=TestMod
+version=2.1.0-beta
+`;
+      const metadata = parseInfoIniContent(content);
+      expect(metadata.version).toBe('2.1.0-beta');
+    });
+  });
+
   describe('parseInfoIniContent - INI parsing', () => {
     it('should handle ini with sections', () => {
       const content = `

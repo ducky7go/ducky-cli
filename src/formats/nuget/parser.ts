@@ -100,7 +100,7 @@ export function parseInfoIniContent(content: string): ModMetadata {
       `Invalid version format: ${version}`,
       [
         'Version must follow SemVer 2.0 format',
-        'Example: 1.0.0, 2.1.0-beta, 3.0.0-rc.1',
+        'Examples: 1.0.0, 2.1.0-beta, 3.0.0-rc.1, 0.1.2-dev.1, 1.0.0-dev.2',
       ],
     );
   }

@@ -86,7 +86,7 @@ export const nugetPushCommand = new Command('push')
         // Generate .nuspec from template
         logger.info('Generating .nuspec file from template...');
         const nuspecPath = join(outputPath, `${metadata.name}.nuspec`);
-        const nuspecContent = await generateNuspec(metadata, readmeFilePath, releaseNotes);
+        const nuspecContent = await generateNuspec(modPath, metadata, readmeFilePath, releaseNotes);
         await writeFile(nuspecPath, nuspecContent, 'utf-8');
         logger.success('Generated .nuspec file');
 

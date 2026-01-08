@@ -1,4 +1,5 @@
 import type { ModMetadata } from './parser.js';
+import { loadDescription } from './parser.js';
 
 // Inline template following NuGet Mod Packaging Specification v1.0
 const NUSPEC_TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
@@ -34,12 +35,14 @@ const NUSPEC_TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
  * Generate .nuspec XML content from mod metadata using template
  * Based on NuGet Mod Packaging Specification v1.0
  *
+ * @param modPath - Path to the mod directory
  * @param metadata - Parsed mod metadata
  * @param readmeFilePath - Relative path from mod dir to README.md (e.g., "../pkg/README.md")
  * @param releaseNotes - Optional release notes content
  * @returns .nuspec XML content
  */
 export async function generateNuspec(
+  modPath: string,
   metadata: ModMetadata,
   readmeFilePath?: string,
   releaseNotes?: string
@@ -74,8 +77,9 @@ export async function generateNuspec(
     copyrightBlock = `<copyright>${escapeXml(metadata.copyright)}</copyright>`;
   }
 
-  // Description: use metadata.description for short description
-  const description = metadata.description || '';
+  // Description: load full description with fallback chain
+  // Uses loadDescription to fetch from readme file, description/*.md, or metadata.description
+  const description = await loadDescription(modPath, metadata);
 
   // README: add <readme> block if readmeFilePath is provided
   let readmeBlock = '';

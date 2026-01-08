@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { generateNuspec } from '../../src/formats/nuget/nuspec.js';
 import type { ModMetadata } from '../../src/formats/nuget/parser.js';
+import { join } from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const fixturesDir = join(__dirname, '..', 'fixtures');
 
 describe('Nuspec Generation', () => {
   describe('Version handling', () => {
@@ -10,7 +17,7 @@ describe('Nuspec Generation', () => {
         version: '0.1.2-dev.1',
         description: 'Test mod',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<version>0.1.2-dev.1</version>');
     });
 
@@ -20,7 +27,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0-dev.2',
         description: 'Test mod',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<version>1.0.0-dev.2</version>');
     });
 
@@ -30,7 +37,7 @@ describe('Nuspec Generation', () => {
         version: '2.1.0-beta',
         description: 'Test mod',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<version>2.1.0-beta</version>');
     });
 
@@ -40,7 +47,7 @@ describe('Nuspec Generation', () => {
         version: '3.0.0-rc.1+build.123',
         description: 'Test mod',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<version>3.0.0-rc.1+build.123</version>');
     });
 
@@ -50,7 +57,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         description: 'Test mod',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<version>1.0.0</version>');
     });
   });
@@ -62,7 +69,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         projectUrl: 'https://example.com',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<projectUrl>https://example.com</projectUrl>');
     });
 
@@ -72,7 +79,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         license: 'MIT',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<license type="expression">MIT</license>');
     });
 
@@ -82,7 +89,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         copyright: '2024 Test',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<copyright>2024 Test</copyright>');
     });
   });
@@ -94,7 +101,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         displayName: 'Test Mod Display',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<title>Test Mod Display</title>');
     });
 
@@ -103,7 +110,7 @@ describe('Nuspec Generation', () => {
         name: 'TestMod',
         version: '1.0.0',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<title>TestMod</title>');
     });
   });
@@ -116,7 +123,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         description: longDesc,
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<description><![CDATA[');
     });
 
@@ -126,7 +133,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         description: 'Line 1\nLine 2\nLine 3',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<description><![CDATA[');
     });
 
@@ -136,7 +143,7 @@ describe('Nuspec Generation', () => {
         name: 'TestMod',
         version: '1.0.0',
       };
-      const nuspec = await generateNuspec(metadata, undefined, longRn);
+      const nuspec = await generateNuspec('/tmp/test', metadata, undefined, longRn);
       expect(nuspec).toContain('<releaseNotes><![CDATA[');
     });
   });
@@ -148,7 +155,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         tags: ['Cities: Skylines', 'Update', 'Items & Things'],
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<tags>Cities:-Skylines Update Items-&amp;-Things duckymod game-mod</tags>');
     });
 
@@ -158,7 +165,7 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         tags: ['Complex Tag With Spaces'],
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<tags>Complex-Tag-With-Spaces duckymod game-mod</tags>');
     });
 
@@ -167,7 +174,7 @@ describe('Nuspec Generation', () => {
         name: 'TestMod',
         version: '1.0.0',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<tags>duckymod game-mod</tags>');
     });
 
@@ -177,8 +184,59 @@ describe('Nuspec Generation', () => {
         version: '1.0.0',
         tags: ['update', 'economy', 'mod'],
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec('/tmp/test', metadata);
       expect(nuspec).toContain('<tags>update economy mod duckymod game-mod</tags>');
+    });
+  });
+
+  describe('Enhanced description loading', () => {
+    it('should use loadDescription to get full description content', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '1.0.0',
+        description: 'Short description',
+      };
+      // When no additional description files exist, should fall back to metadata.description
+      const nuspec = await generateNuspec('/tmp/nonexistent', metadata);
+      expect(nuspec).toContain('<description>Short description</description>');
+    });
+
+    it('should load description from description/zh.md when available (higher priority than en.md)', async () => {
+      const modPath = join(fixturesDir, 'mod-with-description');
+      const metadata: ModMetadata = {
+        name: 'ModWithDescription',
+        version: '1.0.0',
+        description: 'Short description from info.ini',
+      };
+      const nuspec = await generateNuspec(modPath, metadata);
+      // Should use description/zh.md content (higher priority than en.md)
+      expect(nuspec).toContain('这是从 description/zh.md 加载的详细描述');
+      expect(nuspec).toContain('<description><![CDATA[');
+      expect(nuspec).toContain('## 功能');
+    });
+
+    it('should load description from description/en.md when zh.md does not exist', async () => {
+      const modPath = join(fixturesDir, 'mod-with-en-only');
+      const metadata: ModMetadata = {
+        name: 'ModWithEnOnly',
+        version: '1.0.0',
+        description: 'Short description from info.ini',
+      };
+      const nuspec = await generateNuspec(modPath, metadata);
+      // Should use description/en.md content when zh.md doesn't exist
+      expect(nuspec).toContain('This is a detailed description from description/en.md (only en.md exists)');
+      expect(nuspec).toContain('<description><![CDATA[');
+      expect(nuspec).toContain('## Features');
+    });
+
+    it('should fallback to metadata.description when no description files exist', async () => {
+      const metadata: ModMetadata = {
+        name: 'TestMod',
+        version: '1.0.0',
+        description: 'Fallback description',
+      };
+      const nuspec = await generateNuspec('/tmp/nonexistent-path-12345', metadata);
+      expect(nuspec).toContain('<description>Fallback description</description>');
     });
   });
 });

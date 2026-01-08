@@ -83,7 +83,7 @@ export const nugetPackCommand = new Command('pack')
 
       // Generate .nuspec
       logger.info('Generating .nuspec file...');
-      const nuspecContent = await generateNuspec(metadata, readmeFilePath, releaseNotes);
+      const nuspecContent = await generateNuspec(modPath, metadata, readmeFilePath, releaseNotes);
       const nuspecPath = join(outputPath, `${metadata.name}.nuspec`);
       await writeFile(nuspecPath, nuspecContent, 'utf-8');
       logger.success(`Generated: ${basename(nuspecPath)}`);

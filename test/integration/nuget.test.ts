@@ -79,7 +79,7 @@ version=1.0.0
         author: 'Test Author',
         tags: ['game', 'mod'],
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec(fixturesDir, metadata);
       expect(nuspec).toContain('<?xml version="1.0" encoding="utf-8"?>');
       expect(nuspec).toContain('<id>TestMod</id>');
       expect(nuspec).toContain('<version>1.0.0</version>');
@@ -94,7 +94,7 @@ version=1.0.0
         version: '1.0.0',
         description: 'A & B < C > D "E" \'F\'',
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec(fixturesDir, metadata);
       expect(nuspec).toContain('&amp;');
       expect(nuspec).toContain('&lt;');
       expect(nuspec).toContain('&gt;');
@@ -108,7 +108,7 @@ version=1.0.0
         version: '1.0.0',
         dependencies: ['OtherMod:1.0.0', 'AnotherMod'],
       };
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec(fixturesDir, metadata);
       expect(nuspec).toContain('<dependency id="OtherMod" version="1.0.0" />');
       expect(nuspec).toContain('<dependency id="AnotherMod" />');
     });
@@ -120,7 +120,7 @@ version=1.0.0
         description: 'A test mod',
         author: 'Test Author',
       };
-      const nuspec = await generateNuspec(metadata, '../pkg/README.md');
+      const nuspec = await generateNuspec(fixturesDir, metadata, '../pkg/README.md');
       expect(nuspec).toContain('<readme>docs/README.md</readme>');
       expect(nuspec).toContain('<file src="../pkg/README.md" target="docs/" />');
     });
@@ -131,7 +131,7 @@ version=1.0.0
         version: '1.0.0',
         description: 'A test mod',
       };
-      const nuspec = await generateNuspec(metadata, undefined, 'Fixed bug #123');
+      const nuspec = await generateNuspec(fixturesDir, metadata, undefined, 'Fixed bug #123');
       expect(nuspec).toContain('<releaseNotes>Fixed bug #123</releaseNotes>');
     });
 
@@ -142,7 +142,7 @@ version=1.0.0
         description: 'A test mod',
       };
       const releaseNotes = '## Changelog\n- Fixed bug A\n- Fixed bug B';
-      const nuspec = await generateNuspec(metadata, undefined, releaseNotes);
+      const nuspec = await generateNuspec(fixturesDir, metadata, undefined, releaseNotes);
       expect(nuspec).toContain('<releaseNotes><![CDATA[');
       expect(nuspec).toContain('## Changelog');
     });
@@ -214,7 +214,7 @@ version=1.0.0
       expect(validation.valid).toBe(true);
 
       // Generate .nuspec
-      const nuspec = await generateNuspec(metadata);
+      const nuspec = await generateNuspec(validModPath, metadata);
       expect(nuspec).toContain('<id>ExampleMod</id>');
 
       // Collect files

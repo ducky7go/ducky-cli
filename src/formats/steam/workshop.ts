@@ -173,7 +173,7 @@ export async function initSteamworks(): Promise<void> {
       `Failed to load Steamworks: ${error instanceof Error ? error.message : String(error)}`,
       [
         'Ensure @ducky7go/steamworks.js is installed',
-        'Try running: npm install',
+        'Try running: pnpm install',
         'Ensure Steam is installed and running',
       ]
     );

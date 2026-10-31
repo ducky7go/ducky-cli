@@ -34,13 +34,13 @@ The CI workflow MUST verify that TypeScript code successfully compiles without e
 #### Scenario: Valid code compiles
 
 **Given** the workflow is running on a PR
-**When** `npm run build` executes
+**When** `pnpm run build` executes
 **Then** the compilation step should succeed with exit code 0
 
 #### Scenario: Invalid code fails compilation
 
 **Given** the workflow is running on a PR with TypeScript errors
-**When** `npm run build` executes
+**When** `pnpm run build` executes
 **Then** the compilation step should fail with a non-zero exit code
 
 #### Scenario: Build artifacts not required
@@ -58,19 +58,19 @@ The CI workflow MUST execute the full test suite and require all tests to pass.
 #### Scenario: All tests pass
 
 **Given** the workflow is running on a PR
-**When** `npm test` executes
+**When** `pnpm test` executes
 **Then** all tests should pass and the step should succeed
 
 #### Scenario: Failing test blocks PR
 
 **Given** the workflow is running on a PR with a failing test
-**When** `npm test` executes
+**When** `pnpm test` executes
 **Then** the step should fail and the workflow should mark the PR as failing
 
 #### Scenario: No tests is acceptable
 
 **Given** the project has no test files yet
-**When** `npm test` executes with no tests
+**When** `pnpm test` executes with no tests
 **Then** the step should succeed (test runner handles empty suites)
 
 ---
@@ -82,13 +82,13 @@ The CI workflow MUST enforce ESLint code quality rules.
 #### Scenario: Clean code passes lint
 
 **Given** the workflow is running on a PR
-**When** `npm run lint` executes
+**When** `pnpm run lint` executes
 **Then** the linting step should succeed with no errors or warnings
 
 #### Scenario: Lint errors block PR
 
 **Given** the workflow is running on a PR with ESLint errors
-**When** `npm run lint` executes
+**When** `pnpm run lint` executes
 **Then** the step should fail and display the linting issues
 
 #### Scenario: Lint warnings may fail

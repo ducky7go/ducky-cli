@@ -39,10 +39,10 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 ## 构建 / 测试 / 运行
 
 `package.json` 中的脚本：
-- `npm run build` - `tsc`，输出到 `dist/`（ESM，`"type": "module"`）。
-- `npm test` - `vitest --run`（`test/**/*.test.ts`）；`npm run test:watch`、`npm run test:coverage` 也存在。
-- `npm run dev` - `tsx src/cli.ts`。
-- `npm run lint` - `eslint src`；`npm run format` - `prettier --write src`（`.prettierrc.json`：单引号、分号、printWidth 100、2 空格）。
+- `pnpm run build` - `tsc`，输出到 `dist/`（ESM，`"type": "module"`）。
+- `pnpm test` - `vitest --run`（`test/**/*.test.ts`）；`pnpm run test:watch`、`pnpm run test:coverage` 也存在。
+- `pnpm run dev` - `tsx src/cli.ts`。
+- `pnpm run lint` - `eslint src`；`pnpm run format` - `prettier --write src`（`.prettierrc.json`：单引号、分号、printWidth 100、2 空格）。
 - 运行已构建版本：`node dist/cli.js <args>` 或 `bin/ducky`。
 - `.env.example` 提供 `NUGET_API_KEY`、`NUGET_SERVER`；README 还提到 `STEAM_APP_ID`。`.env` 已被 gitignore，绝不要提交或打印其内容。
 
@@ -51,7 +51,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - ESM：源码内相对导入带 `.js` 后缀（见 `src/cli.ts`）；`tsconfig` 为 `strict`。
 - 配置优先级（`src/utils/config.ts`）：CLI 参数 > 环境变量 > 默认值（`.duckyrc` 仅在注释中，未实现）。
 - 版本：`GitVersion.yml`（main 为 ContinuousDelivery，`dev` 标签）。CI 发布时用 `npm version <version> --no-git-tag-version` 覆盖 `package.json` 版本，因此其中的 `0.0.1` 仅是占位。
-- CI：`pr-check.yml`（PR 到 main：`npm ci`、`npm run build`、`npm test`，Node 18）；`publish.yml`（`v*` 标签发布到 npm 的 `latest`，main 上未打标签的提交发布到 `dev` 标签；检查/构建用 Node 24，需 `ducky7go/ducky-cli` 仓库本身才会部署）；`release-drafter.yml`。
+- CI：`pr-check.yml`（PR 到 main：`pnpm install --frozen-lockfile`、`pnpm run build`、`pnpm test`，Node 18）；`publish.yml`（`v*` 标签发布到 npm 的 `latest`，main 上未打标签的提交发布到 `dev` 标签；检查/构建用 Node 24，需 `ducky7go/ducky-cli` 仓库本身才会部署）；`release-drafter.yml`。
 - 提交信息：`git log` 可见 conventional commits 与 PR 编号（如 `better description for nuget (#12)`），仅有 1 条浅克隆历史可参考。
 - 较大变更走 OpenSpec（见上方受管块）。
 
@@ -59,7 +59,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 - `dist/`、`node_modules`、`.env`、`mods_unzip`、`pkg`、`coverage` 均被 gitignore，不要提交构建产物。
 - NuGet 打包依赖 nuget.exe：`client.ts` 在非 Windows 上通过 `mono` 运行，找不到时从 `dist.nuget.org` 下载；在 Linux/macOS 上需要安装 Mono。
-- `bin/ducky` 只运行 `dist/cli.js`，开发时要先 `npm run build`（或用 `npm run dev`）。
+- `bin/ducky` 只运行 `dist/cli.js`，开发时要先 `pnpm run build`（或用 `pnpm run dev`）。
 - `openspec/project.md` 仍是未填写的模板，不含项目信息。
 - 两个 CI 工作流使用 `submodules: recursive`，但仓库没有 `.gitmodules`。
 - `pr-check.yml` 使用 Node 18，`publish.yml` 使用 Node 24，`package.json` 声明 `engines.node >=18`。

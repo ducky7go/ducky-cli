@@ -87,7 +87,7 @@ if [ "$USE_NPM_DEV" = true ]; then
 else
     # Build ducky CLI
     echo "Building ducky CLI..."
-    npm run build
+    pnpm run build
     if [ $? -ne 0 ]; then
         echo "Error: Build failed"
         exit 1
@@ -97,7 +97,7 @@ else
 
     # Verify build output exists
     if [ ! -f "${SCRIPT_DIR}/dist/cli.js" ]; then
-        echo "Error: ducky CLI not built. Run 'npm run build' first."
+        echo "Error: ducky CLI not built. Run 'pnpm run build' first."
         exit 1
     fi
 

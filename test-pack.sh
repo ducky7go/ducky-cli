@@ -15,7 +15,7 @@ fi
 
 # Build ducky CLI
 echo "Building ducky CLI..."
-npm run build
+pnpm run build
 if [ $? -ne 0 ]; then
     echo "Error: Build failed"
     exit 1

@@ -18,6 +18,8 @@ export enum LogLevel {
 export interface LoggerConfig {
   verbose?: boolean;
   quiet?: boolean;
+  /** Send every non-error message to stderr so stdout stays free for machine output */
+  stderr?: boolean;
 }
 
 /**
@@ -26,10 +28,23 @@ export interface LoggerConfig {
 export class Logger {
   protected level: LogLevel;
   private quiet: boolean;
+  private stderr: boolean;
 
   constructor(config: LoggerConfig = {}) {
     this.level = config.verbose ? LogLevel.DEBUG : LogLevel.INFO;
     this.quiet = config.quiet ?? false;
+    this.stderr = config.stderr ?? false;
+  }
+
+  /**
+   * Write a regular (non-warning) line to stdout, or stderr in stderr mode
+   */
+  private out(line: string): void {
+    if (this.stderr) {
+      console.error(line);
+    } else {
+      console.log(line);
+    }
   }
 
   /**
@@ -44,7 +59,7 @@ export class Logger {
    */
   debug(message: string): void {
     if (this.level <= LogLevel.DEBUG && !this.quiet) {
-      console.log(chalk.gray(`[DEBUG] ${message}`));
+      this.out(chalk.gray(`[DEBUG] ${message}`));
     }
   }
 
@@ -53,7 +68,7 @@ export class Logger {
    */
   info(message: string): void {
     if (this.level <= LogLevel.INFO && !this.quiet) {
-      console.log(chalk.blue(`ℹ ${message}`));
+      this.out(chalk.blue(`ℹ ${message}`));
     }
   }
 
@@ -62,7 +77,7 @@ export class Logger {
    */
   success(message: string): void {
     if (this.level <= LogLevel.SUCCESS && !this.quiet) {
-      console.log(chalk.green(`✔ ${message}`));
+      this.out(chalk.green(`✔ ${message}`));
     }
   }
 
@@ -93,7 +108,7 @@ export class Logger {
    */
   blank(): void {
     if (!this.quiet) {
-      console.log();
+      this.out('');
     }
   }
 
@@ -102,9 +117,9 @@ export class Logger {
    */
   header(title: string): void {
     if (!this.quiet) {
-      console.log();
-      console.log(chalk.bold.cyan(`╔═ ${title}`));
-      console.log(chalk.bold.cyan('╚' + '═'.repeat(title.length + 2)));
+      this.out('');
+      this.out(chalk.bold.cyan(`╔═ ${title}`));
+      this.out(chalk.bold.cyan('╚' + '═'.repeat(title.length + 2)));
     }
   }
 
@@ -118,7 +133,7 @@ export class Logger {
       start: () => {
         if (!started && !this.quiet) {
           started = true;
-          console.log(chalk.cyan(`◐ ${text}`));
+          this.out(chalk.cyan(`◐ ${text}`));
         }
       },
       stop: () => {

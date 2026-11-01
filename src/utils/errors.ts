@@ -131,3 +131,98 @@ export class SteamConfigError extends SteamError {
     this.name = 'SteamConfigError';
   }
 }
+
+/**
+ * Workshop legal agreement page the user must accept before items become visible
+ */
+export const WORKSHOP_AGREEMENT_URL = 'https://steamcommunity.com/sharedfiles/workshoplegalagreement';
+
+/**
+ * True when the CI environment variable is set to a truthy value ("true" or "1")
+ */
+export function isCiEnvironment(env: NodeJS.ProcessEnv = process.env): boolean {
+  const value = env.CI;
+  return value === 'true' || value === '1';
+}
+
+/**
+ * Explains that Workshop publishing needs a local Steam client, and points to the Steam-free checks
+ */
+export const CI_STEAM_HINT =
+  'Headless Steam publishing is not supported by this tool: Workshop commands need a locally running, logged-in Steam client. In CI, use `ducky steam validate` or `ducky steam push --dry-run` instead.';
+
+/**
+ * Prepend the CI hint to suggestions when running under CI
+ */
+export function withCiHint(suggestions: string[], env: NodeJS.ProcessEnv = process.env): string[] {
+  return isCiEnvironment(env) ? [CI_STEAM_HINT, ...suggestions] : suggestions;
+}
+
+/**
+ * Error raised when the Steam client cannot be reached (not running or not logged in)
+ */
+export class SteamNotRunningError extends SteamError {
+  constructor(
+    message: string = 'Steam is not running or you are not logged in',
+    suggestions?: string[],
+  ) {
+    super(
+      message,
+      withCiHint(
+        suggestions ?? [
+          'Start the Steam client and log in',
+          'Make sure Steam and this terminal run as the same user at the same privilege level',
+          'Retry the command once Steam is running',
+        ],
+      ),
+    );
+    Object.defineProperty(this, 'code', {
+      value: 'STEAM_NOT_RUNNING',
+      enumerable: true,
+      writable: false,
+    });
+    this.name = 'SteamNotRunningError';
+  }
+}
+
+/**
+ * Error raised when the Steamworks native library cannot be loaded
+ */
+export class SteamLibraryError extends SteamError {
+  constructor(reason: string, suggestions?: string[]) {
+    super(
+      `The Steamworks library failed to load: ${reason}`,
+      suggestions ?? [
+        'Check that the platform is supported by @ducky7go/steamworks.js',
+        'Reinstall dependencies with pnpm install',
+      ],
+    );
+    Object.defineProperty(this, 'code', {
+      value: 'STEAM_LIBRARY_ERROR',
+      enumerable: true,
+      writable: false,
+    });
+    this.name = 'SteamLibraryError';
+  }
+}
+
+/**
+ * Error/guidance raised when the Steam Workshop legal agreement has not been accepted
+ */
+export class SteamAgreementError extends SteamError {
+  constructor(message: string = 'The Steam Workshop legal agreement has not been accepted', suggestions?: string[]) {
+    super(
+      message,
+      suggestions ?? [
+        `Accept the agreement at ${WORKSHOP_AGREEMENT_URL} while logged in with the same account`,
+        'Run the push command again after accepting; the item stays hidden until then',
+      ],
+    );
+    Object.defineProperty(this, 'code', {
+      value: 'STEAM_AGREEMENT_ERROR',
+      enumerable: true,
+      writable: false,
+    });
+    this.name = 'SteamAgreementError';
+  }
+}

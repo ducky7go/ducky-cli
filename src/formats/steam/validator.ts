@@ -21,12 +21,14 @@ export class SteamValidator {
 
   /**
    * Validate all aspects of a mod for Steam Workshop publishing
+   * @param directory - Mod directory
+   * @param appId - Resolved App ID to check; defaults to the environment/.duckyrc resolution
    */
-  async validate(directory: string): Promise<ValidationResult> {
+  async validate(directory: string, appId?: number): Promise<ValidationResult> {
     const errors: Array<{ message: string; suggestions?: string[] }> = [];
 
     // Validate App ID
-    const appIdError = this.validateAppId(getSteamAppId());
+    const appIdError = this.validateAppId(appId ?? getSteamAppId());
     if (appIdError) {
       errors.push(appIdError);
     }

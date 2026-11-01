@@ -1,23 +1,33 @@
 /**
  * Standalone Steam Workshop uploader script
- * Run as a separate process to ensure proper cleanup of Steamworks proxy
+ * Run as a separate process to ensure proper cleanup of Steamworks proxy.
+ *
+ * The parent process resolves App ID, visibility and tags and passes them in
+ * (STEAM_APP_ID env, --visibility, --tags-json). This process builds the same push
+ * plan that --dry-run renders and turns it into the Steamworks update payloads.
  */
 
-import { join } from 'path';
 import { createLogger } from '../../utils/logger.js';
-import { SteamUploadError } from '../../utils/errors.js';
-import { parseInfoIni } from '../nuget/parser.js';
-import { savePublishedFileId, getPublishedFileId } from './parser.js';
-import { loadDescriptions, loadTitles, getPrimaryLanguageContent } from './metadata.js';
+import { SteamNotRunningError, SteamLibraryError } from '../../utils/errors.js';
+import { savePublishedFileId } from './parser.js';
 import { ProgressTracker, WorkshopUploadStatus } from './progress.js';
 import { ProgressDisplay } from './progress-display.js';
 import { getSteamAppId } from './config.js';
+import {
+  buildPushPlan,
+  buildMainUpdateDetails,
+  buildLanguageUpdateDetails,
+} from './dry-run.js';
 import {
   initSteamworks,
   shutdownSteamworks,
   createWorkshopItem,
   updateWorkshopItemWithProgress,
-  type WorkshopUpdateDetails,
+  isAgreementRequired,
+  agreementGuidance,
+  AGREEMENT_MARKER,
+  UPLOAD_EXIT_STEAM_NOT_RUNNING,
+  UPLOAD_EXIT_LIBRARY_FAILED,
 } from './workshop.js';
 
 /**
@@ -27,24 +37,10 @@ interface PushOptions {
   updateDescription: boolean;
   changelog?: string;
   skipTail?: boolean;
-}
-
-/**
- * Append submission footer if not skipped
- */
-function appendTail(content: string, skipTail: boolean): string {
-  if (skipTail) {
-    return content;
-  }
-  const footer = '[hr]Submmited via ducky cli';
-  if (!content) {
-    return footer;
-  }
-  // Check if content already ends with the footer
-  if (content.trim().endsWith(footer)) {
-    return content;
-  }
-  return `${content}\n\n${footer}`;
+  /** Visibility name resolved by the parent process */
+  visibility?: string;
+  /** Tags resolved by the parent process; omitted when none are configured */
+  tags?: string[];
 }
 
 /**
@@ -56,7 +52,7 @@ async function steamPushActionInternal(
   modPath: string,
   options: PushOptions
 ): Promise<void> {
-  const { updateDescription, changelog, skipTail = false } = options;
+  const { updateDescription, changelog, skipTail = false, visibility, tags } = options;
   const logger = createLogger({ verbose: true });
   const progress = new ProgressTracker();
   const progressDisplay = new ProgressDisplay();
@@ -71,18 +67,29 @@ async function steamPushActionInternal(
   progressDisplay.start();
 
   try {
-    // Phase 1: Preparing
+    // Phase 1: Preparing - build the push plan (local files only)
     progress.report(WorkshopUploadStatus.Preparing, 'Parsing mod metadata...');
-    const metadata = await parseInfoIni(modPath);
-
-    logger.info(`Mod: ${metadata.displayName || metadata.name}`);
-    logger.info(`Version: ${metadata.version}`);
 
     const appId = getSteamAppId();
     logger.info(`Steam App ID: ${appId}`);
 
-    const publishedFileId = getPublishedFileId(metadata);
-    const isFirstTimeUpload = !publishedFileId;
+    const plan = await buildPushPlan(modPath, {
+      updateDescription,
+      changelog,
+      skipTail,
+      appId,
+      cliVisibility: visibility,
+      cliTags: tags,
+      defaults: {},
+    });
+
+    logger.info(`Visibility: ${plan.visibility} (${plan.visibilityValue})`);
+    if (plan.tags) {
+      logger.info(`Tags: ${plan.tags.join(', ')}`);
+    }
+
+    const publishedFileId = plan.publishedFileId;
+    const isFirstTimeUpload = plan.isFirstTimeUpload;
 
     if (isFirstTimeUpload) {
       progress.report(WorkshopUploadStatus.RequestingId, 'Creating new Workshop item...');
@@ -111,34 +118,19 @@ async function steamPushActionInternal(
       logger.info(`Saved publishedFileId ${finalPublishedFileId} to info.ini`);
     }
 
-    // Phase 4: Load descriptions and titles
-    logger.debug('Loading descriptions and titles...');
-    const descriptions = await loadDescriptions(modPath);
-    const titles = await loadTitles(modPath, metadata.displayName || metadata.name);
-
-    logger.info(`Found ${descriptions.length} description(s) and ${titles.length} title(s)`);
-    if (descriptions.length > 0) {
-      const langs = descriptions.map(d => d.language).join(', ');
-      logger.debug(`Languages: ${langs}`);
+    // Phase 4: Descriptions and titles (already loaded into the plan)
+    logger.info(`Found ${plan.descriptionFileCount} description(s)`);
+    if (plan.otherLanguages.length > 0 || plan.primaryLanguage) {
+      logger.debug(`Primary language: ${plan.primaryLanguage ?? 'N/A'}`);
     }
 
     // Phase 5: Prepare main upload details
     progress.report(WorkshopUploadStatus.StartingSteamUpload, 'Preparing Workshop upload...');
 
-    const previewPath = join(modPath, 'preview.png');
-    const primaryContent = getPrimaryLanguageContent(descriptions, titles);
-
-    logger.debug(`Primary language: ${primaryContent.description?.language || 'N/A'}`);
     logger.debug(`Content path: ${modPath}`);
-    logger.debug(`Preview path: ${previewPath}`);
+    logger.debug(`Preview path: ${plan.previewPath}`);
 
-    // Build update details
-    const updateDetails: WorkshopUpdateDetails = {
-      contentPath: modPath,
-      previewPath: previewPath,
-      visibility: 0, // Public
-      changeNote: appendTail(changelog || '', skipTail),
-    };
+    const updateDetails = buildMainUpdateDetails(plan);
 
     if (changelog) {
       logger.debug(`Changelog: ${changelog.substring(0, 50)}${changelog.length > 50 ? '...' : ''}`);
@@ -148,30 +140,15 @@ async function steamPushActionInternal(
     if (isFirstTimeUpload) {
       // First-time upload: ALWAYS set primary language description
       logger.info('Setting primary language description (required for new items)');
-
-      if (primaryContent.title) {
-        updateDetails.title = primaryContent.title.title;
-        logger.info(`Title: ${primaryContent.title.title}`);
+      if (plan.primaryTitle !== undefined) {
+        logger.info(`Title: ${plan.primaryTitle}`);
       }
-
-      if (primaryContent.description) {
-        updateDetails.description = appendTail(primaryContent.description.content, skipTail);
-        logger.debug(`Description length: ${primaryContent.description.content.length} characters`);
+      if (plan.primaryDescription !== undefined) {
+        logger.debug(`Description length: ${plan.primaryDescription.length} characters`);
       }
     } else if (updateDescription) {
-      // Update with --update-description flag: Update primary language
       logger.info('Updating all language descriptions...');
-
-      // Update primary language first
-      if (primaryContent.title) {
-        updateDetails.title = primaryContent.title.title;
-      }
-
-      if (primaryContent.description) {
-        updateDetails.description = appendTail(primaryContent.description.content, skipTail);
-      }
     } else {
-      // Update without --update-description flag: Skip ALL descriptions
       logger.info('Description updates: disabled (use --update-description to enable)');
     }
 
@@ -191,44 +168,35 @@ async function steamPushActionInternal(
     logger.success('Content uploaded successfully');
 
     // Phase 8: Update other languages if --update-description flag is set
-    if (updateDescription) {
-      const otherLanguages = descriptions.filter(
-        (d) => d.language !== primaryContent.description?.language
-      );
+    const otherLanguages = plan.otherLanguages;
+    if (otherLanguages.length > 0) {
+      const action = isFirstTimeUpload ? 'Uploading' : 'Updating';
+      logger.info(`${action} ${otherLanguages.length} additional language(s)...`);
 
-      if (otherLanguages.length > 0) {
-        const action = isFirstTimeUpload ? 'Uploading' : 'Updating';
-        logger.info(`${action} ${otherLanguages.length} additional language(s)...`);
-
-        for (let i = 0; i < otherLanguages.length; i++) {
-          const lang = otherLanguages[i];
-          progress.reportTranslationProgress(i + 1, otherLanguages.length);
-          logger.info(`  [${i + 1}/${otherLanguages.length}] ${lang.language}`);
-
-          // Find title for this language
-          const langTitle = titles.find((t) => t.language === lang.language);
-
-          // Update with only title and description for this language
-          const langUpdateDetails: WorkshopUpdateDetails = {
-            title: langTitle?.title,
-            description: appendTail(lang.content, skipTail),
-            language: lang.language,
-          };
-
-          await updateWorkshopItemWithProgress(finalPublishedFileId!, langUpdateDetails, logger);
-        }
-
-        logger.success(`All ${otherLanguages.length} language(s) processed`);
+      for (let i = 0; i < otherLanguages.length; i++) {
+        const lang = otherLanguages[i];
+        progress.reportTranslationProgress(i + 1, otherLanguages.length);
+        logger.info(`  [${i + 1}/${otherLanguages.length}] ${lang.language}`);
+        await updateWorkshopItemWithProgress(
+          finalPublishedFileId!,
+          buildLanguageUpdateDetails(lang),
+          logger
+        );
       }
+
+      logger.success(`All ${otherLanguages.length} language(s) processed`);
     }
 
     // Phase 9: Complete
+    if (isAgreementRequired()) {
+      // Printed on stdout so the parent process can flag this directory as needing attention
+      console.log(`[WARN] ${AGREEMENT_MARKER}: ${agreementGuidance()}`);
+    }
+    const action = isFirstTimeUpload ? 'Published' : 'Updated';
     if (updateDescription) {
-      const languageCount = descriptions.length > 0 ? descriptions.length : 1;
-      const action = isFirstTimeUpload ? 'Published' : 'Updated';
+      const languageCount = plan.descriptionFileCount > 0 ? plan.descriptionFileCount : 1;
       logger.success(`${action} Workshop item: ${finalPublishedFileId} (${languageCount} language(s))`);
     } else {
-      const action = isFirstTimeUpload ? 'Published' : 'Updated';
       logger.success(`${action} Workshop item: ${finalPublishedFileId}`);
     }
 
@@ -245,6 +213,30 @@ async function steamPushActionInternal(
     // Shutdown Steamworks
     shutdownSteamworks();
   }
+}
+
+/**
+ * Parse the --tags-json argument (a JSON array of strings)
+ */
+function parseTagsJson(raw: string): string[] {
+  const parsed: unknown = JSON.parse(raw);
+  if (!Array.isArray(parsed) || parsed.some((t) => typeof t !== 'string')) {
+    throw new Error('--tags-json must be a JSON array of strings');
+  }
+  return parsed as string[];
+}
+
+/**
+ * Map a failure to the exit code the parent process understands
+ */
+function exitCodeFor(error: unknown): number {
+  if (error instanceof SteamNotRunningError) {
+    return UPLOAD_EXIT_STEAM_NOT_RUNNING;
+  }
+  if (error instanceof SteamLibraryError) {
+    return UPLOAD_EXIT_LIBRARY_FAILED;
+  }
+  return 1;
 }
 
 /**
@@ -267,15 +259,29 @@ async function main() {
     ? args[changelogIndex + 1]
     : undefined;
 
+  const visibilityIndex = args.indexOf('--visibility');
+  const visibility = visibilityIndex >= 0 && args[visibilityIndex + 1]
+    ? args[visibilityIndex + 1]
+    : undefined;
+
+  const tagsIndex = args.indexOf('--tags-json');
+
   try {
+    const tags = tagsIndex >= 0 && args[tagsIndex + 1] !== undefined
+      ? parseTagsJson(args[tagsIndex + 1])
+      : undefined;
+
     await steamPushActionInternal(modPath, {
       updateDescription,
       changelog,
       skipTail,
+      visibility,
+      tags,
     });
     process.exit(0);
   } catch (error) {
-    process.exit(1);
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(exitCodeFor(error));
   }
 }
 

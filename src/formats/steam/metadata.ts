@@ -155,6 +155,31 @@ export function mapFilenameToLanguage(filename: string): string | null {
 }
 
 /**
+ * Every language value accepted by mapFilenameToLanguage (for help and error messages)
+ */
+export function supportedLanguageInputs(): string[] {
+  return Object.keys(LANGUAGE_CODE_MAP);
+}
+
+/**
+ * Local description filename for a Steam language code.
+ * english -> en.md, schinese -> zh.md, tchinese -> zh-tw.md; other languages keep their Steam code.
+ * Every returned name maps back to the same language through mapFilenameToLanguage.
+ */
+export function languageToFilename(steamLanguage: string): string {
+  switch (steamLanguage) {
+    case 'english':
+      return 'en';
+    case 'schinese':
+      return 'zh';
+    case 'tchinese':
+      return 'zh-tw';
+    default:
+      return steamLanguage;
+  }
+}
+
+/**
  * Extract title from markdown content
  * The title is the first H1 heading found in the markdown
  * @param markdown - The markdown content
@@ -174,7 +199,7 @@ function extractTitleFromMarkdown(markdown: string): string {
  * @param markdown - The markdown content
  * @returns BBCode content
  */
-function markdownToBBCode(markdown: string): string {
+export function markdownToBBCode(markdown: string): string {
   let result = markdown;
 
   // Escape HTML tags first (prevent HTML injection)

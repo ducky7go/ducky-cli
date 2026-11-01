@@ -229,3 +229,66 @@ describe('CLI and Client - Basic Coverage', () => {
     });
   });
 });
+
+describe('Steam push documented command lines', () => {
+  it('lists the new push options and accepts every documented push command line', async () => {
+    const { steamPushCommand } = await import('../../src/commands/steam/push.js');
+    const longFlags = steamPushCommand.options.map((o) => o.long);
+    for (const flag of ['--visibility', '--tags', '--dry-run', '--app-id', '--verbose', '--changelog', '--update-description', '--skip-tail']) {
+      expect(longFlags).toContain(flag);
+    }
+
+    const documented = [
+      ['./mods/MyMod'],
+      ['./mods/MyMod', '--update-description', '--changelog', 'fix'],
+      ['./mods/MyMod', '--visibility', 'friends', '--tags', 'Weapons,Balance'],
+      ['./mods/MyMod', '--dry-run', '--visibility', 'friends', '--tags', 'a,b', '--changelog', 'Fix'],
+      ['./mods/MyMod', '--app-id', '3167020', '-v'],
+    ];
+    for (const argv of documented) {
+      const { unknown } = steamPushCommand.parseOptions(argv);
+      expect(unknown, `unknown options for ${argv.join(' ')}`).toEqual([]);
+    }
+  });
+
+  it('push help text documents --visibility, --tags, --dry-run and --app-id', async () => {
+    const { steamPushCommand } = await import('../../src/commands/steam/push.js');
+    const help = steamPushCommand.helpInformation();
+    expect(help).toContain('--visibility <name>');
+    expect(help).toContain('--tags <list>');
+    expect(help).toContain('--dry-run');
+    expect(help).toContain('--app-id <id>');
+  });
+});
+
+describe('Steam subcommand help lists shared options', () => {
+  it('every steam subcommand documents --app-id and -v, --verbose', async () => {
+    const { Command } = await import('commander');
+    const { registerSteamCommands } = await import('../../src/commands/steam/index.js');
+    const program = new Command();
+    registerSteamCommands(program);
+    const steam = program.commands.find((c) => c.name() === 'steam');
+    expect(steam).toBeDefined();
+    const names = ['validate', 'push', 'list', 'info', 'subscribed', 'link', 'pull'];
+    for (const name of names) {
+      const sub = steam!.commands.find((c) => c.name() === name);
+      expect(sub, `subcommand ${name}`).toBeDefined();
+      const help = sub!.helpInformation();
+      expect(help, `${name} --app-id`).toContain('--app-id <id>');
+      expect(help, `${name} -v`).toContain('-v, --verbose');
+    }
+  });
+
+  it('link and pull document their own options', async () => {
+    const { Command } = await import('commander');
+    const { registerSteamCommands } = await import('../../src/commands/steam/index.js');
+    const program = new Command();
+    registerSteamCommands(program);
+    const steam = program.commands.find((c) => c.name() === 'steam')!;
+    const link = steam.commands.find((c) => c.name() === 'link')!.helpInformation();
+    expect(link).toContain('--force');
+    const pull = steam.commands.find((c) => c.name() === 'pull')!.helpInformation();
+    expect(pull).toContain('--language <code>');
+    expect(pull).toContain('--force');
+  });
+});

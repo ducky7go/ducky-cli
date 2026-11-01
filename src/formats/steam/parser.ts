@@ -99,3 +99,29 @@ export function getPublishedFileId(metadata: ModMetadata): number | undefined {
 export function hasPublishedFileId(metadata: ModMetadata): boolean {
   return getPublishedFileId(metadata) !== undefined;
 }
+
+/**
+ * Read publishedFileId from info.ini without requiring the other mod fields.
+ * Used by read-only and linking commands that must work on partially valid info.ini files.
+ * @param directory - Path to the mod directory
+ * @returns The published item ID, or undefined when the key is absent
+ * @throws {FileSystemError} When info.ini cannot be read
+ * @throws {ValidationError} When the value is not a positive integer
+ */
+export async function readPublishedFileId(directory: string): Promise<number | undefined> {
+  const content = await readTextFile(`${directory}/info.ini`);
+  for (const raw of content.split(/\r?\n/)) {
+    const match = raw.trim().match(/^publishedFileId\s*=\s*(.*)$/);
+    if (!match) {
+      continue;
+    }
+    const value = match[1].trim().replace(/^["']|["']$/g, '');
+    if (!/^\d+$/.test(value) || Number(value) <= 0) {
+      throw new ValidationError(`publishedFileId in ${directory}/info.ini is not a positive integer: "${value}"`, [
+        'Set publishedFileId to the numeric Workshop item ID, or remove the line',
+      ]);
+    }
+    return Number(value);
+  }
+  return undefined;
+}

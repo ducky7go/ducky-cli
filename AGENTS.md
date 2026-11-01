@@ -1,21 +1,7 @@
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
+## OpenSpec
 
-These instructions are for AI assistants working in this project.
+This repo has no `openspec/` directory. OpenSpec for all `ducky7go-mono` sub-repos lives in the parent repo: `../../openspec/` (workflow rules `../../openspec/AGENTS.md`, specs `../../openspec/specs/`, changes `../../openspec/changes/`). This repo's former project context is `../../openspec/projects/ducky-cli/project.md`.
 
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
 
 # ducky-cli
 
@@ -33,7 +19,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - `bin/ducky` - 包装脚本，启动 `dist/cli.js`（需先构建）。
 - `test/unit`、`test/integration`、`test/fixtures`（各类合法/非法模组样例）；`mods/` - 供手工验证的示例模组。
 - `docs/nuget.md`、`docs/steam.md` - 用户文档。
-- `openspec/specs/` - 已有能力规格（cli-nuget-pack、cli-nuget-push、cli-steam-push、path-handling、ci-pr-check 等）；`openspec/changes/archive/` - 已归档变更。
+- `../../openspec/specs/` - 已有能力规格（cli-nuget-pack、cli-nuget-push、cli-steam-push、path-handling、ci-pr-check 等）；`../../openspec/changes/archive/` - 已归档变更。
 - `push-mod.sh <mod-name> <nuget|steam> [options] [--prod]` - 用 `mods/<mod-name>` 本地推送；`test-pack.sh` - 打包并解压所有 `mods/` 用于检查。
 
 ## 构建 / 测试 / 运行
@@ -53,14 +39,14 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 - 版本：`GitVersion.yml`（main 为 ContinuousDelivery，`dev` 标签）。CI 发布时用 `npm version <version> --no-git-tag-version` 覆盖 `package.json` 版本，因此其中的 `0.0.1` 仅是占位。
 - CI：`pr-check.yml`（PR 到 main：`pnpm install --frozen-lockfile`、`pnpm run build`、`pnpm test`，Node 18）；`publish.yml`（`v*` 标签发布到 npm 的 `latest`，main 上未打标签的提交发布到 `dev` 标签；检查/构建用 Node 24，需 `ducky7go/ducky-cli` 仓库本身才会部署）；`release-drafter.yml`。
 - 提交信息：`git log` 可见 conventional commits 与 PR 编号（如 `better description for nuget (#12)`），仅有 1 条浅克隆历史可参考。
-- 较大变更走 OpenSpec（见上方受管块）。
+- 较大变更走 OpenSpec（见上方 OpenSpec 说明）。
 
 ## 注意事项
 
 - `dist/`、`node_modules`、`.env`、`mods_unzip`、`pkg`、`coverage` 均被 gitignore，不要提交构建产物。
 - NuGet 打包依赖 nuget.exe：`client.ts` 在非 Windows 上通过 `mono` 运行，找不到时从 `dist.nuget.org` 下载；在 Linux/macOS 上需要安装 Mono。
 - `bin/ducky` 只运行 `dist/cli.js`，开发时要先 `pnpm run build`（或用 `pnpm run dev`）。
-- `openspec/project.md` 仍是未填写的模板，不含项目信息。
+- `../../openspec/projects/ducky-cli/project.md` 仍是未填写的模板，不含项目信息。
 - 两个 CI 工作流使用 `submodules: recursive`，但仓库没有 `.gitmodules`。
 - `pr-check.yml` 使用 Node 18，`publish.yml` 使用 Node 24，`package.json` 声明 `engines.node >=18`。
 

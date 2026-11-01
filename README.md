@@ -24,12 +24,14 @@ ducky nuget push ./mods/MyMod.1.0.0.nupkg
 # Steam 创意工坊发布
 ducky steam push ./mods/MyMod
 ducky steam push ./mods/MyMod --update-description
+ducky steam push ./mods/MyMod --visibility friends --tags Weapons,Balance
+ducky steam push ./mods/MyMod --dry-run   # 仅预览，不需要 Steam 客户端
 ```
 
 ## 文档
 
 - [NuGet 文档](./docs/nuget.md) - 打包和发布到 NuGet 服务器
-- [Steam 文档](./docs/steam.md) - 发布到 Steam 创意工坊
+- [Steam 文档](./docs/steam.md) - 发布到 Steam 创意工坊（包括 [CI 使用说明](./docs/steam.md#ci-使用说明)、[额外预览图/视频不支持](./docs/steam.md#额外预览图视频不支持) 与 [删除作品](./docs/steam.md#ducky-steam-delete)）
 
 ## 功能特性
 
@@ -46,8 +48,16 @@ ducky steam push ./mods/MyMod --update-description
 | `ducky nuget pack <path>` | 将模组目录打包为 `.nupkg` |
 | `ducky nuget push <path>` | 发布到 NuGet 服务器 |
 | `ducky nuget validate <path>` | 验证 NuGet 模组 |
-| `ducky steam validate <path>` | 验证 Steam 创意工坊模组 |
-| `ducky steam push <path>` | 发布到 Steam 创意工坊 |
+| `ducky steam validate <path>` | 验证 Steam 创意工坊模组（无需 Steam 客户端） |
+| `ducky steam push <path>` | 发布到 Steam 创意工坊，支持 `--visibility`、`--tags`、`--dry-run` |
+| `ducky steam list` | 列出你发布的创意工坊作品（`--json`、`--stats`） |
+| `ducky steam info <id\|path>` | 查看作品详情（`--json`） |
+| `ducky steam subscribed` | 列出已订阅的作品及安装状态（`--json`） |
+| `ducky steam link <path> <id>` | 把模组目录关联到已有作品（写入 `publishedFileId`，不连接 Steam） |
+| `ducky steam pull <path>` | 拉取作品描述到 `description/<语言>.md`（`--language`、`--force`） |
+| `ducky steam delete <id>` | 删除你拥有的作品（需要确认，或 `--yes`） |
+
+Steam 命令的详细说明（App ID 优先级、`.duckyrc`、可见性与标签、CI 使用说明）见 [Steam 文档](./docs/steam.md)。
 
 ## 配置
 
@@ -61,6 +71,20 @@ export NUGET_SERVER=https://api.nuget.org/v3/index.json
 # Steam
 export STEAM_APP_ID=3167020
 ```
+
+Steam 的默认值也可以写在 `.duckyrc`（JSON，从当前目录向上查找，其次是用户主目录）：
+
+```json
+{
+  "steam": {
+    "appId": 3167020,
+    "visibility": "friends",
+    "tags": ["Weapons", "Balance"]
+  }
+}
+```
+
+App ID 的优先级为 `--app-id` > `STEAM_APP_ID` > `.duckyrc` > 默认值 `3167020`。详见 [Steam 文档](./docs/steam.md#app-id-优先级)。
 
 ## 模组目录结构
 

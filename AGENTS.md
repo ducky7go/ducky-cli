@@ -38,7 +38,7 @@ This repo has no `openspec/` directory. OpenSpec for all `ducky7go-mono` sub-rep
 - 配置优先级（`src/utils/config.ts`）：CLI 参数 > 环境变量 > 默认值（`.duckyrc` 仅在注释中，未实现）。
 - 版本：`GitVersion.yml`（main 为 ContinuousDelivery，`dev` 标签）。CI 发布时用 `npm version <version> --no-git-tag-version` 覆盖 `package.json` 版本，因此其中的 `0.0.1` 仅是占位。
 - CI：`pr-check.yml`（PR 到 main：`pnpm install --frozen-lockfile`、`pnpm run build`、`pnpm test`，Node 18）；`publish.yml`（`v*` 标签发布到 npm 的 `latest`，main 上未打标签的提交发布到 `dev` 标签；检查/构建用 Node 24，需 `ducky7go/ducky-cli` 仓库本身才会部署）；`release-drafter.yml`。
-- 提交信息：`git log` 可见 conventional commits 与 PR 编号（如 `better description for nuget (#12)`），仅有 1 条浅克隆历史可参考。
+- 提交信息：`git log` 可见 conventional commits 与 PR 编号（如 `better description for nuget (#12)`）。
 - 较大变更走 OpenSpec（见上方 OpenSpec 说明）。
 
 ## 注意事项

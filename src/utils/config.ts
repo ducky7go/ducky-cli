@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Load .env file if it exists
-dotenvConfig();
+dotenvConfig({ quiet: true });
 
 /**
  * Configuration interface for NuGet operations

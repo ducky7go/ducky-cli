@@ -154,7 +154,7 @@ export function toWorkshopItemSummary(raw: RawWorkshopItem): WorkshopItemSummary
     upvotes: raw.numUpvotes ?? 0,
     downvotes: raw.numDownvotes ?? 0,
     tags: raw.tags ?? [],
-    url: raw.url ?? `https://steamcommunity.com/sharedfiles/filedetails/?id=${id}`,
+    url: raw.url || `https://steamcommunity.com/sharedfiles/filedetails/?id=${id}`,
     owner: raw.owner?.steamId64 !== undefined ? String(raw.owner.steamId64) : null,
     description: raw.description ?? '',
   };

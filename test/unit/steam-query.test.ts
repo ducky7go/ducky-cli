@@ -129,6 +129,11 @@ describe('item conversion and lookup', () => {
     expect(summary.owner).toBe('76561198000000000');
   });
 
+  it('falls back to the community URL when Steam returns an empty URL', () => {
+    const summary = toWorkshopItemSummary(raw(77n, 'NoUrl', { url: '' }));
+    expect(summary.url).toBe('https://steamcommunity.com/sharedfiles/filedetails/?id=77');
+  });
+
   it('getWorkshopItem returns null when Steam has no item', async () => {
     const client = fakeClient({ getItem: async () => null });
     expect(await getWorkshopItem(client, 99999999n)).toBeNull();

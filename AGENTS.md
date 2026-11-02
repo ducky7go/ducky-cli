@@ -1,6 +1,6 @@
 ## OpenSpec
 
-This repo has no `openspec/` directory. OpenSpec for all `ducky7go-mono` sub-repos lives in the parent repo: `../../openspec/` (workflow rules `../../openspec/AGENTS.md`, specs `../../openspec/specs/`, changes `../../openspec/changes/`). This repo's former project context is `../../openspec/projects/ducky-cli/project.md`.
+This repo has no `openspec/` directory. OpenSpec for all `ducky7go-mono` sub-repos lives in the parent repo: `../../openspec/` (workflow rules `../../openspec/AGENTS.md`, specs `../../openspec/specs/`, changes `../../openspec/changes/`).
 
 
 # ducky-cli
@@ -46,7 +46,6 @@ This repo has no `openspec/` directory. OpenSpec for all `ducky7go-mono` sub-rep
 - `dist/`、`node_modules`、`.env`、`mods_unzip`、`pkg`、`coverage` 均被 gitignore，不要提交构建产物。
 - NuGet 打包依赖 nuget.exe：`client.ts` 在非 Windows 上通过 `mono` 运行，找不到时从 `dist.nuget.org` 下载；在 Linux/macOS 上需要安装 Mono。
 - `bin/ducky` 只运行 `dist/cli.js`，开发时要先 `pnpm run build`（或用 `pnpm run dev`）。
-- `../../openspec/projects/ducky-cli/project.md` 仍是未填写的模板，不含项目信息。
 - 两个 CI 工作流使用 `submodules: recursive`，但仓库没有 `.gitmodules`。
 - `pr-check.yml` 使用 Node 18，`publish.yml` 使用 Node 24，`package.json` 声明 `engines.node >=18`。
 

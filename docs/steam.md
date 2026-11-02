@@ -306,6 +306,28 @@ ducky steam delete 1234567890 --yes
 
 Steam 拒绝删除（作品不存在，或不属于当前账号）时，会显示 Steam 给出的原因和检查建议，退出码为 1。
 
+**删除结果与退出码：**
+
+删除在独立的子进程中执行，因此即使 Steam 原生库异常终止，命令仍能给出结果。结果分为三种：
+
+| 结果 | 含义 | 退出码 |
+|------|------|--------|
+| 已删除 | Steam 接受了删除；或 Steam 库异常结束后，再次查询确认作品已不存在 | 0 |
+| 未删除 | Steam 拒绝删除；或删除请求尚未发出（子进程无法启动、Steam 未运行）；或异常结束后确认作品仍存在 | 1 |
+| 不确定 | Steam 库异常结束，且无法确认作品是否仍存在（例如 Steam 无法连接） | 2 |
+
+只有"已删除"会输出 `Deleted Workshop item <id>`。"不确定"时不会输出成功信息，命令会给出核实步骤。
+
+**为什么会出现"不确定"：** Steam 原生库偶尔会在删除过程中异常终止（abort 或信号）。此时命令收不到 Steam 的回复，作品可能已经被删除，也可能没有。导致异常终止的 Steam 结果码尚未经复现确认，因此本文档不指定具体的结果码；在确认之前，原因视为未确认。
+
+**如何核实并决定是否重试：**
+
+1. 运行 `ducky steam info <id>`。若作品已不存在，会提示 `Workshop item <id> was not found`。
+2. 或运行 `ducky steam list`，确认该 ID 不在列表中。
+3. 只有作品仍然存在时才重试 `ducky steam delete <id>`。作品已不存在时重试没有意义。
+
+若 Steam 库异常结束但之后核实确认作品已删除，命令仍以退出码 0 结束；输出会说明 Steam 库结束的方式（信号或退出码），并说明删除已在之后经核实确认。
+
 ## 描述更新行为
 
 根据是首次上传还是更新，行为有所不同：
@@ -541,6 +563,8 @@ ducky steam push ./mods/MyMod --update-description --changelog "新功能"
 | `Steam is not running` | Steam 客户端未运行 | 启动 Steam 并登录 |
 | `The Steamworks library failed to load` | 原生库无法在当前平台加载 | 查看提示中的原因；确认平台受支持并重新执行 `pnpm install` |
 | `needs the Workshop agreement` 警告 | 创意工坊协议尚未接受 | 见下文"需要接受创意工坊协议" |
+| `Steam 库意外结束`（abort 或信号） | 原生库在命令执行中被终止，命令无法从 Steam 得到回复 | 用 `ducky steam info <id>` 或 `ducky steam list` 核实作品状态后再重试；删除命令见上文"删除结果与退出码" |
+| `The publish outcome is unverified` | 上传子进程被信号终止 | 先在创意工坊或 `ducky steam info <id>` 中确认作品，确认后再重试，避免重复创建 |
 
 ### Steam 未运行或未登录
 

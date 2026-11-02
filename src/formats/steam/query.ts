@@ -260,19 +260,66 @@ export async function listSubscribedItems(client: SteamWorkshopClient): Promise<
 }
 
 /**
+ * Matches the readable reasons the native layer uses when Steam's result is unrecognised or
+ * the completion was lost. Such a result says nothing about whether the item was deleted.
+ */
+const UNKNOWN_OUTCOME_PATTERN = /unknown (steam )?result|outcome is unknown|completion was not received/i;
+
+/** True when a native error reason means the deletion outcome is unknown rather than rejected */
+export function isUnknownOutcomeReason(reason: string): boolean {
+  return UNKNOWN_OUTCOME_PATTERN.test(reason);
+}
+
+/** Error for a deletion Steam rejected with a stated reason */
+export function rejectionError(id: bigint, reason: string): SteamError {
+  return new SteamError(`Steam rejected the deletion of item ${id}, so it was not deleted: ${reason}`, [
+    'Check that the item ID is correct',
+    'Check that the item belongs to the signed-in Steam account',
+    'Check that the App ID is correct (--app-id, STEAM_APP_ID or .duckyrc)',
+  ]);
+}
+
+/** Error for a deletion whose result Steam did not give a usable answer for; the item must be checked */
+export function unknownOutcomeError(id: bigint, reason: string): SteamError {
+  return new SteamError(
+    `The result of deleting item ${id} is unknown (${reason}). The item may or may not have been deleted.`,
+    [
+      `Check whether the item still exists: ducky steam info ${id}, or ducky steam list`,
+      'Retry only after confirming the item still exists',
+    ],
+  );
+}
+
+/**
  * Delete a Workshop item. Steam's rejection reason is included in the error.
- * @throws {SteamError} When Steam rejects the deletion
+ * An unrecognised result or lost completion is reported as an unknown outcome, not as a rejection.
+ * @throws {SteamError} When Steam rejects the deletion or the outcome is unknown
  */
 export async function deleteWorkshopItem(client: SteamWorkshopClient, id: bigint): Promise<void> {
   try {
     await client.deleteItem(id);
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    throw new SteamError(`Steam rejected the deletion of item ${id}: ${reason}`, [
-      'Check that the item ID is correct',
-      'Check that the item belongs to the signed-in Steam account',
-      'Check that the App ID is correct (--app-id, STEAM_APP_ID or .duckyrc)',
-    ]);
+    throw isUnknownOutcomeReason(reason) ? unknownOutcomeError(id, reason) : rejectionError(id, reason);
+  }
+}
+
+/** Whether the item still exists on Steam, as far as one query can tell */
+export type ItemPresence = 'present' | 'absent' | 'unknown';
+
+/**
+ * Check whether a Workshop item exists, for use after a deletion attempt.
+ * A failed or inconclusive query is 'unknown', never 'absent'.
+ */
+export async function verifyItemPresence(client: SteamWorkshopClient, id: bigint): Promise<ItemPresence> {
+  if (!client.isConnected()) {
+    return 'unknown';
+  }
+  try {
+    const raw = await client.getItem(id);
+    return !raw || raw.publishedFileId === undefined ? 'absent' : 'present';
+  } catch {
+    return 'unknown';
   }
 }
 

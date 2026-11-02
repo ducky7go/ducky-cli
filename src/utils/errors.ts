@@ -226,3 +226,22 @@ export class SteamAgreementError extends SteamError {
     this.name = 'SteamAgreementError';
   }
 }
+
+/**
+ * Error raised when a Steam deletion may or may not have happened and a check is needed.
+ * It carries exit code 2 so scripts can tell it apart from a confirmed or a rejected outcome.
+ */
+export class IndeterminateOutcomeError extends SteamError {
+  /** Process exit code for an indeterminate outcome */
+  public readonly exitCode = 2;
+
+  constructor(message: string, suggestions?: string[]) {
+    super(message, suggestions);
+    Object.defineProperty(this, 'code', {
+      value: 'STEAM_INDETERMINATE_OUTCOME',
+      enumerable: true,
+      writable: false,
+    });
+    this.name = 'IndeterminateOutcomeError';
+  }
+}

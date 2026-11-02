@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { Command } from 'commander';
-import { withCommonOptions, runSteamAction, isStdinInteractive } from '../../src/commands/steam/shared.js';
-import { ConfigError } from '../../src/utils/errors.js';
+import {
+  withCommonOptions,
+  runSteamAction,
+  isStdinInteractive,
+  exitCodeForError,
+} from '../../src/commands/steam/shared.js';
+import { ConfigError, IndeterminateOutcomeError, SteamError } from '../../src/utils/errors.js';
 
 describe('steam shared command helpers', () => {
   afterEach(() => {
@@ -37,6 +42,24 @@ describe('steam shared command helpers', () => {
     const printed = errSpy.mock.calls.map((c) => String(c[0])).join('\n');
     expect(printed).toContain('Something is wrong');
     expect(printed).toContain('Fix it');
+  });
+
+  it('runSteamAction exits with code 2 for an indeterminate outcome', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+
+    await runSteamAction({ verbose: false }, async () => {
+      throw new IndeterminateOutcomeError('The outcome is unknown', ['Check the item']);
+    });
+
+    expect(exitSpy).toHaveBeenCalledWith(2);
+  });
+
+  it('exitCodeForError maps indeterminate to 2 and every other error to 1', () => {
+    expect(exitCodeForError(new IndeterminateOutcomeError('unknown'))).toBe(2);
+    expect(exitCodeForError(new SteamError('rejected'))).toBe(1);
+    expect(exitCodeForError(new ConfigError('bad'))).toBe(1);
+    expect(exitCodeForError('plain string')).toBe(1);
   });
 
   it('runSteamAction does not exit when the body succeeds', async () => {

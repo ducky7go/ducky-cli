@@ -5,7 +5,7 @@
 
 import type { Command } from 'commander';
 import { Logger, createLogger } from '../../utils/logger.js';
-import { DuckyError } from '../../utils/errors.js';
+import { DuckyError, IndeterminateOutcomeError } from '../../utils/errors.js';
 import {
   readAppIdSourcesFromEnvironment,
   resolveSteamAppId,
@@ -40,8 +40,16 @@ export interface RunSteamActionOptions {
 }
 
 /**
+ * Exit code for a failed Steam command: 2 for an indeterminate outcome, 1 for everything else
+ */
+export function exitCodeForError(error: unknown): number {
+  return error instanceof IndeterminateOutcomeError ? error.exitCode : 1;
+}
+
+/**
  * Run a Steam subcommand body with a fresh logger.
- * DuckyError (and any other error) is printed through the logger and the process exits with code 1.
+ * DuckyError (and any other error) is printed through the logger and the process exits with code 1,
+ * or with code 2 for an indeterminate outcome (see exitCodeForError).
  * The body may set process.exitCode itself for partial failures.
  */
 export async function runSteamAction(
@@ -57,7 +65,7 @@ export async function runSteamAction(
     } else {
       logger.error(error instanceof Error ? error : String(error));
     }
-    process.exit(1);
+    process.exit(exitCodeForError(error));
   }
 }
 

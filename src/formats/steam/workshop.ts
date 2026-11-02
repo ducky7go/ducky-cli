@@ -122,10 +122,21 @@ export async function runSteamUploadInChildProcess(
       stderr += data;
     });
 
-    child.on('close', (code) => {
+    child.on('close', (code, signal) => {
       const reason = stderr.trim();
       if (code === 0) {
         resolve({ needsAttention });
+      } else if (code === null) {
+        // Killed by a signal (for example a native abort): the publish outcome is not known
+        reject(
+          new SteamUploadError(
+            `The upload process was stopped by signal ${signal ?? 'unknown'} before it reported a result. The publish outcome is unverified.`,
+            [
+              'Check the item in the Steam Workshop or with `ducky steam info <id>` before retrying',
+              'Retry only after checking, so a second item is not created',
+            ],
+          ),
+        );
       } else if (code === UPLOAD_EXIT_STEAM_NOT_RUNNING) {
         reject(new SteamNotRunningError());
       } else if (code === UPLOAD_EXIT_LIBRARY_FAILED) {

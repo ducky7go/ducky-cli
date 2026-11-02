@@ -2,6 +2,7 @@
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { constants as osConstants } from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,6 +18,11 @@ const child = spawn('node', [scriptPath, ...args], {
   env: process.env,
 });
 
-child.on('exit', (code) => {
-  process.exit(code ?? 0);
+child.on('exit', (code, signal) => {
+  if (code !== null) {
+    process.exit(code);
+  }
+  // Killed by a signal: report failure (128 + signal number, the shell convention), never success
+  const signalNumber = signal ? osConstants.signals[signal] : undefined;
+  process.exit(signalNumber ? 128 + signalNumber : 1);
 });

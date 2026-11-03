@@ -24,7 +24,3 @@ The mod runs automatically with no configuration needed. When you take damage fr
 - Detects all damage types (including enemy attacks, environmental damage, fall damage, etc.)
 - Smart recognition of cold-related buffs for precise status clearing
 - Efficient event listening mechanism ensures rapid response
-
-## 🔗 Technical Support
-Need technical support, bug reports, or suggestions?
-Please visit **[Contact Me Mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3613778329)** for contact information

@@ -24,7 +24,3 @@ El mod se ejecuta automáticamente sin necesidad de configuración. Cuando recib
 - Detecta todos los tipos de daño (incluyendo ataques de enemigos, daño ambiental, daño por caída, etc.)
 - Reconocimiento inteligente de buffs relacionados con el frío para limpieza precisa del estado
 - Mecanismo eficiente de escucha de eventos asegura respuesta rápida
-
-## 🔗 Soporte Técnico
-¿Necesitas soporte técnico, reportes de bugs o sugerencias?
-Por favor visita **[Contact Me Mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3613778329)** para información de contacto

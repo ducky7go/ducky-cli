@@ -24,8 +24,3 @@
 - 检测所有类型的伤害（包括敌人攻击、环境伤害、摔落伤害等）
 - 智能识别寒冷相关buff，精准清除目标状态
 - 高效的事件监听机制，确保响应迅速
-
-
-## 🔗 技术支持
-需要技术支持、Bug反馈或建议？
-请访问 **[Contact Me Mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3613778329)** 查看联系方式

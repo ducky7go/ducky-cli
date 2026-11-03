@@ -24,7 +24,3 @@
 - 檢測所有類型的傷害（包括敵人攻擊、環境傷害、摔落傷害等）
 - 智慧識別寒冷相關buff，精準清除目標狀態
 - 高效的事件監聽機制，確保響應迅速
-
-## 🔗 技術支援
-需要技術支援、Bug反饋或建議？
-請訪問 **[Contact Me Mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3613778329)** 查看聯繫方式

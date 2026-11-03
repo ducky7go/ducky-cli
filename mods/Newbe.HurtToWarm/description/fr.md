@@ -24,7 +24,3 @@ Le mod fonctionne automatiquement sans configuration nécessaire. Quand vous sub
 - Détecte tous les types de dégâts (attaques d'ennemis, dégâts environnementaux, chutes, etc.)
 - Reconnaissance intelligente des buffs liés au froid pour un effacement précis de l'état
 - Mécanisme d'écoute d'événements efficace garantissant une réponse rapide
-
-## 🔗 Support Technique
-Besoin de support technique, rapports de bugs ou suggestions ?
-Veuillez visiter **[Contact Me Mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3613778329)** pour les coordonnées

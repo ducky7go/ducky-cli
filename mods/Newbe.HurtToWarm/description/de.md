@@ -24,7 +24,3 @@ Der Mod läuft automatisch ohne Konfiguration. Wenn Sie Schaden von Feinden oder
 - Erkennt alle Schadensarten (einschließlich Feindangriffe, Umweltschaden, Fallschaden usw.)
 - Intelligente Erkennung von kältebezogenen Buffs für präzises Statuslöschen
 - Effizienter Event-Hearing-Mechanismus gewährleistet schnelle Reaktion
-
-## 🔗 Technischer Support
-Benötigen Sie technischen Support, Bug-Berichte oder Vorschläge?
-Bitte besuchen Sie **[Contact Me Mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3613778329)** für Kontaktinformationen

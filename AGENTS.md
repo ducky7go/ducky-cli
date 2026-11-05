@@ -1,8 +1,3 @@
-## OpenSpec
-
-This repo has no `openspec/` directory. OpenSpec for all `ducky7go-mono` sub-repos lives in the parent repo: `../../openspec/` (workflow rules `../../openspec/AGENTS.md`, specs `../../openspec/specs/`, changes `../../openspec/changes/`).
-
-
 # ducky-cli
 
 ## 项目概述
@@ -11,43 +6,45 @@ This repo has no `openspec/` directory. OpenSpec for all `ducky7go-mono` sub-rep
 
 ## 目录结构
 
-- `src/cli.ts` - 入口，基于 `commander` 注册命令命名空间（`nuget`、`steam`）。
-- `src/commands/{nuget,steam}/` - 子命令：`nuget pack|push|validate`，`steam push|validate`。
-- `src/formats/nuget/` - `parser.ts`（info.ini）、`validator.ts`、`collector.ts`、`nuspec.ts`、`client.ts`（nuget.exe 的查找/下载/执行）。
-- `src/formats/steam/` - 创意工坊相关（`push-handler.ts`、`workshop.ts`、`validator.ts` 等）。
-- `src/templates/nuspec.template`、`src/utils/`（config、fs、logger、errors、version）。
-- `bin/ducky` - 包装脚本，启动 `dist/cli.js`（需先构建）。
-- `test/unit`、`test/integration`、`test/fixtures`（各类合法/非法模组样例）；`mods/` - 供手工验证的示例模组。
+- `src/cli.ts` - 入口，用 `commander` 注册 `nuget` 与 `steam` 两个命名空间。
+- `src/commands/nuget/`（pack、push、validate）与 `src/commands/steam/`（push、validate、list、info、subscribed、link、pull、delete）。
+- `src/formats/nuget/` - `parser.ts`（info.ini）、`validator.ts`、`collector.ts`、`nuspec.ts`、`client.ts`（nuget.exe 的查找、下载、执行）。
+- `src/formats/steam/` - 创意工坊逻辑（如 `push-handler.ts`、`workshop.ts`、`config.ts`、`bbcode.ts`、`validator.ts`）。
+- `src/templates/nuspec.template`；`src/utils/`（config、fs、logger、errors、version）；`src/types/modules.d.ts`。
+- `bin/ducky` - 包装脚本，运行 `dist/cli.js`（需先构建）。
+- `test/unit/*.test.ts`、`test/integration/`、`test/fixtures/`（合法与非法模组样例）、`test/unit.test.ts`。
+- `mods/` - 供手工验证的示例模组（`DisplayItemValue`、`Newbe.HurtToWarm`、`steam-multi-dll-one-matches`）。
 - `docs/nuget.md`、`docs/steam.md` - 用户文档。
-- `../../openspec/specs/` - 已有能力规格（cli-nuget-pack、cli-nuget-push、cli-steam-push、path-handling、ci-pr-check 等）；`../../openspec/changes/archive/` - 已归档变更。
-- `push-mod.sh <mod-name> <nuget|steam> [options] [--prod]` - 用 `mods/<mod-name>` 本地推送；`test-pack.sh` - 打包并解压所有 `mods/` 用于检查。
+- `push-mod.sh <mod-name> <nuget|steam> [options] [--prod]` - 用 `mods/<mod-name>` 做本地推送（`--prod` 改用 npm 发布的版本）；`test-pack.sh` - 打包并解压 `mods/` 下所有模组用于检查。
 
 ## 构建 / 测试 / 运行
 
 `package.json` 中的脚本：
 - `pnpm run build` - `tsc`，输出到 `dist/`（ESM，`"type": "module"`）。
-- `pnpm test` - `vitest --run`（`test/**/*.test.ts`）；`pnpm run test:watch`、`pnpm run test:coverage` 也存在。
-- `pnpm run dev` - `tsx src/cli.ts`。
-- `pnpm run lint` - `eslint src`；`pnpm run format` - `prettier --write src`（`.prettierrc.json`：单引号、分号、printWidth 100、2 空格）。
-- 运行已构建版本：`node dist/cli.js <args>` 或 `bin/ducky`。
-- `.env.example` 提供 `NUGET_API_KEY`、`NUGET_SERVER`；README 还提到 `STEAM_APP_ID`。`.env` 已被 gitignore，绝不要提交或打印其内容。
+- `pnpm test` - `vitest --run`（匹配 `test/**/*.test.ts`）；另有 `pnpm run test:watch`、`pnpm run test:coverage`。
+- `pnpm run dev` - `tsx src/cli.ts`；`pnpm run lint` - `eslint src`；`pnpm run format` - `prettier --write src`。
+- 格式规则见 `.prettierrc.json`：单引号、分号、printWidth 100、2 空格、trailingComma es5。CI 中的格式检查已被注释掉，lint 也不在 PR 检查里。
+- 运行构建产物：`node dist/cli.js <args>` 或 `bin/ducky`。
+- 环境变量：`.env.example` 提供 `NUGET_API_KEY`、`NUGET_SERVER`；`STEAM_APP_ID` 只在 README 中提到。`.env` 已被 gitignore，绝不要提交或打印其内容。
 
 ## 约定
 
 - ESM：源码内相对导入带 `.js` 后缀（见 `src/cli.ts`）；`tsconfig` 为 `strict`。
-- 配置优先级（`src/utils/config.ts`）：CLI 参数 > 环境变量 > 默认值（`.duckyrc` 仅在注释中，未实现）。
-- 版本：`GitVersion.yml`（main 为 ContinuousDelivery，`dev` 标签）。CI 发布时用 `npm version <version> --no-git-tag-version` 覆盖 `package.json` 版本，因此其中的 `0.0.1` 仅是占位。
-- CI：`pr-check.yml`（PR 到 main：`pnpm install --frozen-lockfile`、`pnpm run build`、`pnpm test`，Node 18）；`publish.yml`（`v*` 标签发布到 npm 的 `latest`，main 上未打标签的提交发布到 `dev` 标签；检查/构建用 Node 24，需 `ducky7go/ducky-cli` 仓库本身才会部署）；`release-drafter.yml`。
-- 提交信息：`git log` 可见 conventional commits 与 PR 编号（如 `better description for nuget (#12)`）。
-- 较大变更走 OpenSpec（见上方 OpenSpec 说明）。
+- 配置优先级：
+  - NuGet（`src/utils/config.ts`）：CLI 参数 > 环境变量 > 默认值。`.duckyrc` 不参与 NuGet。
+  - Steam：`--app-id` > `STEAM_APP_ID` > `.duckyrc` > 默认 `3167020`；可见性 `--visibility` > `.duckyrc` 的 `steam.visibility` > `public`；标签 `--tags` > `info.ini` 的 `tags` > `.duckyrc` 的 `steam.tags`，高优先级整体替换，不合并。`.duckyrc` 从当前目录向上查找，其次是用户主目录。
+- 版本：`GitVersion.yml`（main 为 ContinuousDelivery，label `dev`）。CI 用 `npm version <version> --no-git-tag-version` 覆盖 `package.json`，因此其中的 `0.0.1` 只是占位。
+- 发布（`publish.yml`）：`v*` 标签发布到 npm 的 `latest`；main 上未打标签的提交发布到 `dev` 标签。`deploy` 作业只在 `ducky7go/ducky-cli` 仓库内运行。
+- 提交信息使用 conventional commits（如 `fix(cli): ...`、`docs(steam): ...`）。
+- 行为或规范变更遵循 OpenSpec 工作流程。
 
 ## 注意事项
 
 - `dist/`、`node_modules`、`.env`、`mods_unzip`、`pkg`、`coverage` 均被 gitignore，不要提交构建产物。
-- NuGet 打包依赖 nuget.exe：`client.ts` 在非 Windows 上通过 `mono` 运行，找不到时从 `dist.nuget.org` 下载；在 Linux/macOS 上需要安装 Mono。
-- `bin/ducky` 只运行 `dist/cli.js`，开发时要先 `pnpm run build`（或用 `pnpm run dev`）。
-- 两个 CI 工作流使用 `submodules: recursive`，但仓库没有 `.gitmodules`。
-- `pr-check.yml` 使用 Node 18，`publish.yml` 使用 Node 24，`package.json` 声明 `engines.node >=18`。
+- NuGet 打包依赖 nuget.exe：`client.ts` 在非 Windows 上通过 `mono` 运行，找不到时从 `https://dist.nuget.org/win-x86-commandline/latest/nuget.exe` 下载；Linux/macOS 需要安装 Mono。
+- `bin/ducky` 只运行 `dist/cli.js`，改源码后要先 `pnpm run build`（或用 `pnpm run dev`）。
+- `publish.yml` 的作业使用 `submodules: recursive`，但仓库没有 `.gitmodules`。
+- Node 版本：`pr-check.yml` 用 Node 18，`publish.yml` 用 Node 24，`package.json` 声明 `engines.node >=18`。
 
 ## 相关仓库
 

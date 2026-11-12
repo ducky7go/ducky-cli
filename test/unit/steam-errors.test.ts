@@ -16,7 +16,7 @@ vi.mock('child_process', async (importOriginal) => {
   return { ...actual, spawn: hoisted.spawn };
 });
 
-vi.mock('@ducky7go/steamworks.js', () => ({
+vi.mock('@hagicode/steamworks.js', () => ({
   init: hoisted.steamInit,
   isConnected: () => false,
   shutdown: () => {},

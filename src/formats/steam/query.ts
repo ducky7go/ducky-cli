@@ -361,7 +361,7 @@ function reasonOf(error: unknown): string {
  */
 export async function loadSteamModule(): Promise<SteamModule> {
   try {
-    return (await import('@ducky7go/steamworks.js')) as unknown as SteamModule;
+    return (await import('@hagicode/steamworks.js')) as unknown as SteamModule;
   } catch (error) {
     throw new SteamLibraryError(reasonOf(error));
   }

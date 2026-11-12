@@ -193,7 +193,7 @@ export class SteamLibraryError extends SteamError {
     super(
       `The Steamworks library failed to load: ${reason}`,
       suggestions ?? [
-        'Check that the platform is supported by @ducky7go/steamworks.js',
+        'Check that the platform is supported by @hagicode/steamworks.js',
         'Reinstall dependencies with pnpm install',
       ],
     );

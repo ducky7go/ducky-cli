@@ -10,7 +10,7 @@ const steam = vi.hoisted(() => ({
   shutdown: null as unknown,
 }));
 
-vi.mock('@ducky7go/steamworks.js', () => ({
+vi.mock('@hagicode/steamworks.js', () => ({
   init: (_appId?: number) => {
     if (steam.initMode === 'throw') throw new Error('SteamAPI_Init failed');
     if (steam.initMode === 'null') return null;

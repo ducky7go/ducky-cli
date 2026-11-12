@@ -1,5 +1,5 @@
-// Type declarations for @ducky7go/steamworks.js
-declare module '@ducky7go/steamworks.js' {
+// Type declarations for @hagicode/steamworks.js
+declare module '@hagicode/steamworks.js' {
   interface SteamworksOptions {
     appId?: number;
   }

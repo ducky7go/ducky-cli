@@ -6,7 +6,7 @@ const hoisted = vi.hoisted(() => ({
   steamInit: vi.fn(),
 }));
 
-vi.mock('@ducky7go/steamworks.js', () => ({
+vi.mock('@hagicode/steamworks.js', () => ({
   init: hoisted.steamInit,
   isConnected: () => true,
   shutdown: () => {},

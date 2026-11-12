@@ -144,7 +144,7 @@ export async function runSteamUploadInChildProcess(
           new SteamConfigError(
             `The Steamworks library failed to load${reason ? `: ${reason}` : ''}`,
             withCiHint([
-              'Check that the platform is supported by @ducky7go/steamworks.js',
+              'Check that the platform is supported by @hagicode/steamworks.js',
               'Reinstall dependencies with pnpm install',
             ]),
           ),
@@ -229,7 +229,7 @@ export async function initSteamworks(): Promise<void> {
   };
   try {
     // @ts-ignore - steamworks.js is loaded dynamically; its typings do not match the runtime module
-    steamworksModule = await import('@ducky7go/steamworks.js');
+    steamworksModule = await import('@hagicode/steamworks.js');
   } catch (error) {
     throw new SteamLibraryError(error instanceof Error ? error.message : String(error));
   }

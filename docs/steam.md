@@ -610,24 +610,24 @@ Uploading content [██████████░░░░] 67.3% | 15.2 MB /
 
 ### 依赖验证
 
-依据已安装的 `@ducky7go/steamworks.js@0.1.3`（`client.d.ts` 声明与运行时导出）核对：
+依据 `@hagicode/steamworks.js@0.1.6-dev.17` 的 `client.d.ts` 声明核对。运行时列沿用 `@ducky7go/steamworks.js@0.1.3` 时的核对结果；新版本的运行时需要 Steam 客户端，尚未复核：
 
 | API | 声明 | 运行时 | 结果 |
 |-----|------|--------|------|
-| `workshop.getUserItems` | 有 | 有 | 存在 |
-| `workshop.getItem` | 有 | 有 | 存在 |
-| `workshop.getItems` | 有 | 有 | 存在 |
-| `workshop.deleteItem` | 有 | 有 | 存在 |
-| `workshop.getSubscribedItems` | 有 | 有 | 存在 |
-| `workshop.installInfo` | 有 | 有 | 存在 |
-| `localplayer.getSteamId`（含 `accountId`） | 有 | 有 | 存在 |
-| `isConnected` | 有 | 有 | 存在 |
+| `workshop.getUserItems` | 有 | 有（0.1.3，未复核） | 存在 |
+| `workshop.getItem` | 有 | 有（0.1.3，未复核） | 存在 |
+| `workshop.getItems` | 有 | 有（0.1.3，未复核） | 存在 |
+| `workshop.deleteItem` | 有 | 有（0.1.3，未复核） | 存在 |
+| `workshop.getSubscribedItems` | 有 | 有（0.1.3，未复核） | 存在 |
+| `workshop.installInfo` | 有 | 有（0.1.3，未复核） | 存在 |
+| `localplayer.getSteamId`（含 `accountId`） | 有 | 有（0.1.3，未复核） | 存在 |
+| `isConnected` | 有 | 有（顶层导出） | 存在 |
 | `UgcUpdate.tags` / `UgcUpdate.visibility` | 有 | — | 存在 |
 | `WorkshopItem.statistics` | 有 | — | 存在 |
 | `WorkshopItemQueryConfig.includeLongDescription` / `language` | 有 | — | 存在 |
-| 通过 `UgcUpdate` 写入附加预览 | 无字段 | — | **不支持** |
+| 通过 `UgcUpdate` 写入附加预览（`additionalPreviewPaths`） | 有 | — | 存在，CLI 未使用 |
 
-结论：所需 API 全部存在，无需升级依赖。附加预览（`previews/`）只能读取（`WorkshopItem.additionalPreviews`），`UgcUpdate` 没有对应字段，因此 CLI 不支持写入额外预览图或视频，仅使用 `preview.png`。
+结论：所需 API 在声明中全部存在。`UgcUpdate` 现在有 `additionalPreviewPaths` 字段，但 CLI 尚未实现该写入路径，仍只使用 `preview.png`；额外预览图的上传需要单独立项。
 
 注意：`init()` 在 `client.d.ts` 中声明返回 `void`，但顶层 `index.d.ts` 声明返回客户端对象；实现时以顶层入口为准。
 
@@ -644,4 +644,4 @@ Uploading content [██████████░░░░] 67.3% | 15.2 MB /
 
 创意工坊作品只使用模组目录中的 `preview.png` 作为预览图。`previews/` 等目录中的额外图片或视频**不会**被上传，CLI 也不会读取该目录。
 
-原因：`@ducky7go/steamworks.js@0.1.3` 的 `UgcUpdate` 没有用于添加附加预览的字段；`additionalPreviews` 只能在读取作品信息时获得（见上文"依赖验证"）。
+原因：CLI 尚未调用 `UgcUpdate.additionalPreviewPaths`（`@hagicode/steamworks.js@0.1.6-dev.17` 已声明该字段）；`additionalPreviews` 在读取作品信息时返回（见上文"依赖验证"）。

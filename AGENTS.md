@@ -50,4 +50,4 @@
 
 - `ducky7go/dukcy-package-spec` - NuGet 模组打包规范（本工具实现它）。
 - `ducky7go/action-ducky-nuget` - 封装本 CLI 的 GitHub Action。
-- Steam 发布依赖 npm 包 `@ducky7go/steamworks.js`。
+- Steam 发布依赖 npm 包 `@hagicode/steamworks.js`。

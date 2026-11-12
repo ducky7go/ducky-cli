@@ -2,3 +2,5 @@
 # Build scripts that npm used to run implicitly; pnpm blocks them unless allowed.
 allowBuilds:
   esbuild: true
+minimumReleaseAgeExclude:
+  - '@hagicode/steamworks.js@0.1.6-dev.17'
